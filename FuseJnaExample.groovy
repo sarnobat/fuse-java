@@ -11,17 +11,19 @@ import net.fusejna.util.FuseFilesystemAdapterFull;
 
 public class FuseJnaExample extends FuseFilesystemAdapterFull
 {
-	public static void main(final String... args) throws FuseException
+	public static void main(String... args) throws FuseException
 	{
-		//final String[] args1 = { "/sarnobat.garagebandbroken/trash/fuse-jna/mnt" };
+		// Strange - groovy ignores arg1's hardcoding. Maybe it's not an acceptable array initialization in groovy? 
+		final String[] args1 = args;//{ "/sarnobat.garagebandbroken/trash/fuse-jna/mnt" };
 		if (args.length != 1) {
 			System.err.println("Usage: HelloFS <mountpoint>");
 			System.exit(1);
+//			args = new String[]{ "/sarnobat.garagebandbroken/trash/fuse-jna/mnt" };
 		}
 		new FuseJnaExample().log(true).mount(args[0]);
 	}
 
-	final String filename = "/hello.txt";
+	final String filename = "/hello1.txt";
 	final String contents = "Hello World!\n";
 
 	@Override
@@ -52,6 +54,7 @@ public class FuseJnaExample extends FuseFilesystemAdapterFull
 	public int readdir(final String path, final DirectoryFiller filler)
 	{
 		filler.add(filename);
+		filler.add("sridhar.txt");
 		return 0;
 	}
 }
