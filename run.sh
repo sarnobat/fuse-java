@@ -1,0 +1,1 @@
+groovy FuseJnaExample.groovy "/sarnobat.garagebandbroken/trash/fuse-jna/mnt"
