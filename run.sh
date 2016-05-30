@@ -1,1 +1,2 @@
-groovy FuseJnaExample.groovy "/sarnobat.garagebandbroken/trash/fuse-jna/mnt"
+mkdir -p yurl
+groovy FuseYurl.groovy yurl
