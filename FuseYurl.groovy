@@ -173,8 +173,7 @@ public class FuseYurl extends FuseFilesystemAdapterFull {
 		private static final String CYPHER_URI = "http://netgear.rohidekar.com:7474/db/data/cypher";
 
 		private static boolean isNotNull(Object val) {
-			return val != null && !("null".equals(val))
-					&& !(val.getClass().equals(JSON_OBJECT_NULL));
+			return val != null && !("null".equals(val)) && !(val.getClass().equals(JSON_OBJECT_NULL));
 		}
 
 		private static final class Null {
