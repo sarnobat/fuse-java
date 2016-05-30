@@ -70,7 +70,7 @@ public class FuseYurl extends FuseFilesystemAdapterFull {
 		try {
 			items = Yurl.getItemsAtLevelAndChildLevels(29196);
 			System.out.println("FuseYurl.main() items = " + items);
-			System.out.println("FuseYurl.main() categoriesTreeCache = " + categoriesTreeCache);
+			System.out.println("FuseYurl.main() categoriesTreeCache = " + FuseYurl.categoriesTreeCache);
 		} catch (JSONException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -142,7 +142,7 @@ public class FuseYurl extends FuseFilesystemAdapterFull {
 	public int readdir(final String path, final DirectoryFiller filler) {
 		if ("/".equals(path)) {
 			List<String> l = new LinkedList<String>();
-			l.addAll(dirs(categoriesTreeCache));
+			l.addAll(dirs(FuseYurl.categoriesTreeCache));
 			filler.add(l);
 			System.out.println("FuseYurl.readdir() items = " + l);
 			return 0;
@@ -173,7 +173,7 @@ public class FuseYurl extends FuseFilesystemAdapterFull {
 	}
 
 	private List<String> dirs(JSONObject items) {
-		JSONArray a = categoriesTreeCache.getJSONArray("children");
+		JSONArray a = FuseYurl.categoriesTreeCache.getJSONArray("children");
 		List<String> l = new LinkedList<String>();
 		for (int i = 0; i < a.length(); i++) {
 			JSONObject o = a.getJSONObject(i);
@@ -214,7 +214,7 @@ public class FuseYurl extends FuseFilesystemAdapterFull {
 			static JSONObject getCategoriesTree(Integer rootId) throws JSONException, IOException {
 				return new AddSizes(
 				// This is the expensive query, not the other one
-						getCategorySizes(execute(
+						getCategorySizes(FuseYurl.Yurl.execute(
 								"START n=node(*) MATCH n-->u WHERE has(n.name) "
 										+ "RETURN id(n),count(u);",
 								ImmutableMap.<String, Object> of(),
@@ -225,7 +225,7 @@ public class FuseYurl extends FuseFilesystemAdapterFull {
 								// TODO: I don't think we need each path do we?
 								// We
 								// just need each parent-child relationship.
-								execute("START n=node({parentId}) "
+								FuseYurl.Yurl.execute("START n=node({parentId}) "
 										+ "MATCH path=n-[r:CONTAINS*]->c " + "WHERE has(c.name) "
 										+ "RETURN extract(p in nodes(path)| " + "'{ "
 										+ "id : ' + id(p) + ', " + "name : \"'+ p.name +'\" , "
@@ -386,11 +386,11 @@ public class FuseYurl extends FuseFilesystemAdapterFull {
 				IOException {
 			// System.out.println("getItemsAtLevelAndChildLevels() - " +
 			// iRootId);
-			if (categoriesTreeCache == null) {
-				categoriesTreeCache = CategoryTree.getCategoriesTree(iRootId);
+			if (FuseYurl.categoriesTreeCache == null) {
+				FuseYurl.categoriesTreeCache = CategoryTree.getCategoriesTree(iRootId);
 			}
 			// TODO: the source is null clause should be obsoleted
-			JSONObject theQueryResultJson = execute(
+			JSONObject theQueryResultJson = FuseYurl.Yurl.execute(
 					"START source=node({rootId}) "
 							+ "MATCH p = source-[r:CONTAINS*1..2]->u "
 							+ "WHERE (source is null or ID(source) = {rootId}) and not(has(u.type)) AND id(u) > 0  "
