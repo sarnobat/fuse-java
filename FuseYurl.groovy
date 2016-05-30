@@ -47,6 +47,7 @@ public class FuseYurl extends FuseFilesystemAdapterFull {
 
 	private static JSONObject items;
 	private static String root;
+	private static JSONObject categoriesTreeCache;
 
 	public static void main(String... args) throws FuseException {
 		// Strange - groovy ignores arg1's hardcoding. Maybe it's not an
@@ -69,6 +70,7 @@ public class FuseYurl extends FuseFilesystemAdapterFull {
 		try {
 			items = Yurl.getItemsAtLevelAndChildLevels(29196);
 			System.out.println("FuseYurl.main() items = " + items);
+			System.out.println("FuseYurl.main() categoriesTreeCache = " + categoriesTreeCache);
 		} catch (JSONException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -85,17 +87,11 @@ public class FuseYurl extends FuseFilesystemAdapterFull {
 
 	@Override
 	public int getattr(final String path, final StatWrapper stat) {
-		System.out.println("FuseYurl.getattr()");
-		System.out.println("FuseYurl.getattr() path = " + path);
-		System.out.println("FuseYurl.getattr() Paths.get(path).getFileName() = " + Paths.get(path).getFileName());
-		System.out.println("FuseYurl.getattr() files = " + files(items));
-//		if () {
-//			
-//		}
+//		System.out.println("FuseYurl.getattr()");
+//		System.out.println("FuseYurl.getattr() path = " + path);
+//		System.out.println("FuseYurl.getattr() Paths.get(path).getFileName() = " + Paths.get(path).getFileName());
+//		System.out.println("FuseYurl.getattr() files = " + files(items));
 		
-		if ("/Amazon.com: 4,000 Questions for Getting to Know Anyone and Everyone, 2nd Edition (9780375426247): Barbara Ann Kipfer: Books".equals(path)) {
-			System.out.println("FuseYurl.getattr() debug this");
-		}
 		if ("._.".equals(path)) {
 			return -ErrorCodes.ENOENT();
 		}
@@ -106,7 +102,6 @@ public class FuseYurl extends FuseFilesystemAdapterFull {
 		
 		String f = Paths.get(path).getFileName().toString();
 		boolean contains = files(items).contains(f);
-		System.out.println("FuseYurl.getattr() isFile = " + contains);
 		try {
 			if (contains || path.equals(filename)) {
 				stat.setMode(NodeType.FILE).size(contents.length());
@@ -114,7 +109,7 @@ public class FuseYurl extends FuseFilesystemAdapterFull {
 			}
 			Path fileName2 = Paths.get(path).getFileName();
 			Path fileName3 = Paths.get(root).getFileName();
-			if (path.equals(File.separator) || fileName2.equals(fileName3)) { // Root
+			if (path.equals(File.separator) || fileName2.equals(fileName3) || dirs(items).contains(f)) { // Root
 																				// directory
 				stat.setMode(NodeType.DIRECTORY);
 				return 0;
@@ -145,13 +140,24 @@ public class FuseYurl extends FuseFilesystemAdapterFull {
 
 	@Override
 	public int readdir(final String path, final DirectoryFiller filler) {
+		if ("/".equals(path)) {
+			List<String> l = new LinkedList<String>();
+			l.addAll(dirs(categoriesTreeCache));
+			filler.add(l);
+			System.out.println("FuseYurl.readdir() items = " + l);
+			return 0;
+		} else 
+		{
 		filler.add(filename);
 		filler.add("sridhar.txt");
-		List<String> l = files(items);
+		List<String> l = new LinkedList<String>();
+		l.addAll(files(items));
+//		l.addAll(dirs(items));
 //		filler.add(l.subList(1, 2));
 		filler.add(l);
 		System.out.println("FuseYurl.readdir() items = " + l);
 		return 0;
+		}
 	}
 
 	private List<String> files(JSONObject items) {
@@ -161,6 +167,18 @@ public class FuseYurl extends FuseFilesystemAdapterFull {
 			JSONObject o = a.getJSONObject(i);
 			if (o.has("title") && o.getString("title").length() > 0) {
 				l.add(o.getString("title"));
+			}
+		}
+		return ImmutableList.copyOf(l);
+	}
+
+	private List<String> dirs(JSONObject items) {
+		JSONArray a = categoriesTreeCache.getJSONArray("children");
+		List<String> l = new LinkedList<String>();
+		for (int i = 0; i < a.length(); i++) {
+			JSONObject o = a.getJSONObject(i);
+			if (o.has("name") && o.getString("name").length() > 0) {
+				l.add(o.getString("name"));
 			}
 		}
 		return ImmutableList.copyOf(l);
@@ -363,15 +381,13 @@ public class FuseYurl extends FuseFilesystemAdapterFull {
 		}
 
 		private static final Integer ROOT_ID = 45;
-		private static JSONObject categoriesTreeCache;
 
 		static JSONObject getItemsAtLevelAndChildLevels(Integer iRootId) throws JSONException,
 				IOException {
 			// System.out.println("getItemsAtLevelAndChildLevels() - " +
 			// iRootId);
 			if (categoriesTreeCache == null) {
-				// categoriesTreeCache =
-				// CategoryTree.getCategoriesTree(ROOT_ID);
+				categoriesTreeCache = CategoryTree.getCategoriesTree(iRootId);
 			}
 			// TODO: the source is null clause should be obsoleted
 			JSONObject theQueryResultJson = execute(
@@ -392,9 +408,6 @@ public class FuseYurl extends FuseFilesystemAdapterFull {
 				_1: {
 					JSONArray anItem = theDataJson.getJSONArray(i);
 					_11: {
-						System.out
-								.println("FuseYurl.Yurl.getItemsAtLevelAndChildLevels() anItem.get(0) = "
-										+ anItem.get(0));
 						Object object = anItem.get(0);
 						String anId = toString(object);
 						anUncategorizedNodeJsonObject.put("id", anId);
@@ -445,10 +458,6 @@ public class FuseYurl extends FuseFilesystemAdapterFull {
 						Object val = anItem.get(8);
 						if (isNotNull(val)) {
 							String aValue = toString(val);
-							if ("null".equals(aValue)) {
-								System.out
-										.println("getItemsAtLevelAndChildLevels() - does this ever occur?");
-							}
 							anUncategorizedNodeJsonObject.put("biggest_image", aValue);
 						}
 					}
@@ -456,10 +465,6 @@ public class FuseYurl extends FuseFilesystemAdapterFull {
 						Object val = anItem.get(9);
 						if (isNotNull(val)) {
 							String aValue = toString(val);
-							if ("null".equals(aValue)) {
-								System.out
-										.println("getItemsAtLevelAndChildLevels() - does this ever occur?");
-							}
 							anUncategorizedNodeJsonObject.put("user_image", aValue);
 						}
 					}
