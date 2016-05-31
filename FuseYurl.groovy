@@ -173,12 +173,11 @@ public class FuseYurl extends FuseFilesystemAdapterFull {
 			}
 //			l.addAll(files(items));
 			// Add subdirectories
-			{
-				System.out.println("FuseYurl.readdir() - all paths in subdirectory map are: " + categoryPathsToSubcategories.keySet());
-				System.out.println("FuseYurl.readdir() - getting subdirectories of " + path);
-				List<String> c = categoryPathsToSubcategories.get(path);
-				l.addAll(c);
-			}
+			System.out.println("FuseYurl.readdir() - all paths in subdirectory map are: "
+					+ categoryPathsToSubcategories.keySet());
+			System.out.println("FuseYurl.readdir() - getting subdirectories of " + path);
+			List<String> c = categoryPathsToSubcategories.get(path);
+			l.addAll(c);
 			filler.add(l);
 			System.out.println("FuseYurl.readdir() items = " + l);
 			return 0;
