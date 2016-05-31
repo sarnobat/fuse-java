@@ -188,12 +188,7 @@ System.out.println("FuseYurl.CategoryPathsToItems.build() - path = " + key);
 		} else {
 			List<String> l = new LinkedList<String>();
 			JSONObject items = FuseYurl.categoryPathsToItemsInCategory.get(path);
-			
-			if (path.startsWith("/root/products and services/DVD and video/Soccer")) {
-				System.out.println("FuseYurl.readdir()");
-			}
 			if (items == null) {
-				System.out.println("FuseYurl.readdir() path = " + path);
 				
 				// TODO: Move this to a sooner point?
 				// populate
@@ -202,10 +197,12 @@ System.out.println("FuseYurl.CategoryPathsToItems.build() - path = " + key);
 							.parseInt(FuseYurl.categoryPathToId.get(path)));
 					Map<String, JSONObject> build = CategoryPathsToItems.build(ite, path,
 							FuseYurl.categoryIdToName);
-					System.out.println("FuseYurl.readdir() build.keySet() = " + build.keySet());
 					FuseYurl.categoryPathsToItemsInCategory.putAll(build);
 					items = FuseYurl.categoryPathsToItemsInCategory.get(path);
-					checkNotNull(items);
+					if (items == null) {
+						System.out.println("FuseYurl.readdir() no items for path " + path);
+						items = new JSONObject();
+					}
 				} catch (NumberFormatException e) {
 					e.printStackTrace();
 				} catch (JSONException e) {
@@ -217,18 +214,14 @@ System.out.println("FuseYurl.CategoryPathsToItems.build() - path = " + key);
 					
 			l.addAll(files(items));
 			// Add subdirectories
-			System.out.println("FuseYurl.readdir() - getting subdirectories of " + path);
 			List<String> c = categoryPathsToSubcategories.get(path);
 			l.addAll(c);
 			filler.add(l);
-//			System.out.println("FuseYurl.readdir() path = " + path);
-//			System.out.println("FuseYurl.readdir() files = " + files(items));
 			return 0;
 		}
 	}
 
 	private static List<String> files(JSONObject items) {
-//		System.out.println("FuseYurl.files() items = " + items.toString());
 		List<String> l = new LinkedList<String>();
 		checkNotNull(items);
 		if (items.keySet().size() > 0) {
