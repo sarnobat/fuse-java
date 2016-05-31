@@ -31,6 +31,8 @@ import org.json.JSONObject;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -51,6 +53,8 @@ public class FuseYurl extends FuseFilesystemAdapterFull {
 	private static JSONObject categoriesTreeCache;
 	private static Map<String, JSONObject> categoryPathsToItemsInCategory;
 	private static Map<String, List<String>> categoryPathsToSubcategories;
+	private static Map<String, String> categoryIdToName;
+	private static BiMap<String, String> categoryPathToId;
 	private static final Object JSON_OBJECT_NULL = new Null();
 
 	public static void main(String... args) throws FuseException {
@@ -62,15 +66,17 @@ public class FuseYurl extends FuseFilesystemAdapterFull {
 			System.exit(1);
 		}
 		try {
-			items = Yurl.getItemsAtLevelAndChildLevels(29196);
-			FuseYurl.categoryPathsToItemsInCategory = CategoryPathsToItems
-					.build(items);
 			if (FuseYurl.categoriesTreeCache == null) {
 				FuseYurl.categoriesTreeCache = CategoryTree.getCategoriesTree(ROOT_ID);
 				FuseYurl.categoryPathsToSubcategories = CategoryPathsToSubcategories.build(FuseYurl.categoriesTreeCache, "");
+				FuseYurl.categoryIdToName = CategoryIdToName.build(FuseYurl.categoriesTreeCache, "");
+				FuseYurl.categoryPathToId = CategoryPathToId.build(FuseYurl.categoriesTreeCache, "");
 			}
-			System.out.println("FuseYurl.main() items = " + items);
-			System.out.println("FuseYurl.main() categoriesTreeCache = " + FuseYurl.categoriesTreeCache);
+			items = Yurl.getItemsAtLevelAndChildLevels(45);
+			FuseYurl.categoryPathsToItemsInCategory = CategoryPathsToItems
+					.build(items, "", FuseYurl.categoryIdToName);
+//			System.out.println("FuseYurl.main() items = " + items);
+//			System.out.println("FuseYurl.main() categoriesTreeCache = " + FuseYurl.categoriesTreeCache);
 		} catch (JSONException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -81,9 +87,19 @@ public class FuseYurl extends FuseFilesystemAdapterFull {
 	}
 
 	private static class CategoryPathsToItems {
-		static Map<String, JSONObject> build(JSONObject items) {
-			// TODO Auto-generated method stub
-			return null;
+		static Map<String, JSONObject> build(JSONObject items, String path, Map<String, String> categoryIdToName) {
+			Map<String, JSONObject> ret = new HashMap<String, JSONObject>();
+			for (String categoryId : items.keySet()) {
+				String categoryName = categoryIdToName.get(categoryId);
+				System.out.println("FuseYurl.CategoryPathsToItems.build() - categoryId = "
+						+ categoryId + " (" + categoryName + ")");
+				String key = path + "/" + categoryName;
+				if (!FuseYurl.categoryPathToId.keySet().contains(key)) {
+					key = FuseYurl.categoryPathToId.inverse().get(categoryId);
+				}
+				ret.put(key, items);
+			}
+			return ret;
 		}
 	}
 
@@ -161,17 +177,43 @@ public class FuseYurl extends FuseFilesystemAdapterFull {
 			filler.add(filename);
 			List<String> l = new LinkedList<String>();
 			JSONObject items;
-			if ("/".equals(path)) {
-				items = FuseYurl.items;
-			}
-			else {
-				// Temporary. Delete this
-				if (FuseYurl.categoryPathsToItemsInCategory == null) {
-					FuseYurl.categoryPathsToItemsInCategory = ImmutableMap.of();
-				}
+//			if ("/".equals(path)) {
+//				items = FuseYurl.items;
+//			}
+//			else {
+//				// Temporary. Delete this
+//				if (FuseYurl.categoryPathsToItemsInCategory == null) {
+//					FuseYurl.categoryPathsToItemsInCategory = ImmutableMap.of();
+//				}
 				items = FuseYurl.categoryPathsToItemsInCategory.get(path);
+//			}
+			if (items == null) {
+				System.out.println("FuseYurl.readdir() dir to items = " + FuseYurl.categoryPathsToItemsInCategory.keySet());
+				System.out.println("FuseYurl.readdir() path = " + path);
+				
+				// TODO: Move this to a sooner point.
+				// populate
+				{				
+					try {
+						JSONObject ite = Yurl.getItemsAtLevelAndChildLevels(Integer
+								.parseInt(FuseYurl.categoryPathToId.get(path)));
+						Map<String, JSONObject> build = CategoryPathsToItems.build(
+								ite, path, FuseYurl.categoryIdToName);
+						System.out.println("FuseYurl.readdir() build.keySet() = " + build.keySet());
+						FuseYurl.categoryPathsToItemsInCategory.putAll(build);
+						items = FuseYurl.categoryPathsToItemsInCategory.get(path);
+						checkNotNull(items);
+					} catch (NumberFormatException e) {
+						e.printStackTrace();
+					} catch (JSONException e) {
+						e.printStackTrace();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
 			}
-//			l.addAll(files(items));
+					
+			l.addAll(files(items));
 			// Add subdirectories
 			System.out.println("FuseYurl.readdir() - all paths in subdirectory map are: "
 					+ categoryPathsToSubcategories.keySet());
@@ -179,18 +221,25 @@ public class FuseYurl extends FuseFilesystemAdapterFull {
 			List<String> c = categoryPathsToSubcategories.get(path);
 			l.addAll(c);
 			filler.add(l);
-			System.out.println("FuseYurl.readdir() items = " + l);
+			System.out.println("FuseYurl.readdir() path = " + path);
+			System.out.println("FuseYurl.readdir() files = " + files(items));
 			return 0;
 		}
 	}
 
 	private static List<String> files(JSONObject items) {
-		JSONArray a = items.getJSONArray("38044");
+//		System.out.println("FuseYurl.files() items = " + items.toString());
 		List<String> l = new LinkedList<String>();
-		for (int i = 0; i < a.length(); i++) {
-			JSONObject o = a.getJSONObject(i);
-			if (o.has("title") && o.getString("title").length() > 0) {
-				l.add(o.getString("title"));
+		checkNotNull(items);
+		if (items.keySet().size() > 0) {
+			String next = (String) items.keySet().iterator().next();
+			JSONArray a = items.getJSONArray(next);
+			for (int i = 0; i < a.length(); i++) {
+				JSONObject o = a.getJSONObject(i);
+				if (o.has("title") && o.getString("title").length() > 0) {
+					l.add(o.getString("title"));
+//					System.out.println("FuseYurl.files() title = " + o.getString("title"));
+				}
 			}
 		}
 		return ImmutableList.copyOf(l);
@@ -369,6 +418,45 @@ public class FuseYurl extends FuseFilesystemAdapterFull {
 
 	}
 
+	private static class CategoryPathToId {
+		public static BiMap<String, String> build(JSONObject categoriesTreeCache, String prefix) {
+			String categoryName = categoriesTreeCache.getString("name");
+			BiMap<String, String> ret = HashBiMap.create();
+			String key = prefix + "/" + categoryName;
+			String id =  Integer.toString(categoriesTreeCache.getInt("id"));
+			// Immediate children
+			ret.put(key, id);
+			// recursive
+			JSONArray a = categoriesTreeCache.getJSONArray("children");
+			for (int i = 0; i < a.length(); i++) {
+				JSONObject subdir = a.getJSONObject(i);
+				ret.putAll(build(subdir, key));
+			}
+			return ret;
+		}	
+	}
+	private static class CategoryIdToName {
+
+		public static Map<String, String> build(JSONObject categoriesTreeCache, String prefix) {
+			String categoryName = categoriesTreeCache.getString("name");
+			Map<String, String> ret = new HashMap<String, String>();
+			String key = prefix + "/" + categoryName;
+			String id =  Integer.toString(categoriesTreeCache.getInt("id"));
+			// Immediate children
+			ret.put(id, categoryName);
+			// recursive
+			JSONArray a = categoriesTreeCache.getJSONArray("children");
+			for (int i = 0; i < a.length(); i++) {
+				JSONObject subdir = a.getJSONObject(i);
+				ret.putAll(build(subdir, key));
+			}
+//			if ("".equals(prefix)) {
+//				ret.put("", categoryName);
+//			}
+			return ret;
+		}	
+	}
+
 	private static class CategoryPathsToSubcategories {
 	
 		public static Map<String, List<String>> build(JSONObject categoriesTreeCache, String prefix) {
@@ -384,7 +472,6 @@ public class FuseYurl extends FuseFilesystemAdapterFull {
 				JSONObject subdir = a.getJSONObject(i);
 				ret.putAll(build(subdir, key));
 			}
-			System.out.println("FuseYurl.Yurl.CategoryPathsToSubcategories.build() - " + key + " :: " + immediateChildrenNames);
 			if ("".equals(prefix)) {
 				ret.put("", ImmutableList.of(categoryName));
 			}
