@@ -1,2 +1,2 @@
 mkdir -p yurl
-groovy FuseYurl.groovy yurl
+groovy server.groovy yurl
