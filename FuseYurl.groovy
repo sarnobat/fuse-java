@@ -45,41 +45,46 @@ import com.sun.jersey.api.json.JSONConfiguration;
 
 public class FuseYurl extends FuseFilesystemAdapterFull {
 
+	private static final Integer ROOT_ID = 45;
 	private static JSONObject items;
 	private static String root;
 	private static JSONObject categoriesTreeCache;
+	private static Map<String, JSONObject> categoryPathsToItemsInCategory;
+	private static Map<String, List<String>> categoryPathsToSubcategories;
+	private static final Object JSON_OBJECT_NULL = new Null();
 
 	public static void main(String... args) throws FuseException {
 		// Strange - groovy ignores arg1's hardcoding. Maybe it's not an
 		// acceptable array initialization in groovy?
-		final String[] args1 = args;// {
-									// "/sarnobat.garagebandbroken/trash/fuse-jna/mnt"
-									// };
+		final String[] args1 = args;
 		if (args.length != 1) {
 			System.err.println("Usage: HelloFS <mountpoint>");
 			System.exit(1);
-			// args = new String[]{
-			// "/sarnobat.garagebandbroken/trash/fuse-jna/mnt" };
 		}
-		// new Thread() {
-		// @Override
-		// public void run() {
-		// }
-		//
-		// }.start();
 		try {
 			items = Yurl.getItemsAtLevelAndChildLevels(29196);
+			FuseYurl.categoryPathsToItemsInCategory = CategoryPathsToItems
+					.build(items);
+			if (FuseYurl.categoriesTreeCache == null) {
+				FuseYurl.categoriesTreeCache = CategoryTree.getCategoriesTree(ROOT_ID);
+				FuseYurl.categoryPathsToSubcategories = CategoryPathsToSubcategories.build(FuseYurl.categoriesTreeCache, "");
+			}
 			System.out.println("FuseYurl.main() items = " + items);
 			System.out.println("FuseYurl.main() categoriesTreeCache = " + FuseYurl.categoriesTreeCache);
 		} catch (JSONException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		root = args[0];
 		new FuseYurl().log(false).mount(args[0]);
+	}
+
+	private static class CategoryPathsToItems {
+		static Map<String, JSONObject> build(JSONObject items) {
+			// TODO Auto-generated method stub
+			return null;
+		}
 	}
 
 	final String filename = "/hello1.txt";
@@ -101,7 +106,7 @@ public class FuseYurl extends FuseFilesystemAdapterFull {
 		}
 		
 		String f = Paths.get(path).getFileName().toString();
-		boolean contains = files(items).contains(f);
+		boolean contains = files(FuseYurl.items).contains(f);
 		try {
 			if (contains || path.equals(filename)) {
 				stat.setMode(NodeType.FILE).size(contents.length());
@@ -109,8 +114,10 @@ public class FuseYurl extends FuseFilesystemAdapterFull {
 			}
 			Path fileName2 = Paths.get(path).getFileName();
 			Path fileName3 = Paths.get(root).getFileName();
-			if (path.equals(File.separator) || fileName2.equals(fileName3) || dirs(items).contains(f)) { // Root
-																				// directory
+			// Root directory
+			if (path.equals(File.separator) || fileName2.equals(fileName3) || dirs(FuseYurl.categoriesTreeCache).contains(f) || 
+					 isCategory(path)
+					) { 
 				stat.setMode(NodeType.DIRECTORY);
 				return 0;
 			} else {
@@ -128,6 +135,10 @@ public class FuseYurl extends FuseFilesystemAdapterFull {
 		}
 	}
 
+	private boolean isCategory(String path) {
+		return FuseYurl.categoryPathsToSubcategories.keySet().contains(path);
+	}
+
 	@Override
 	public int read(final String path, final ByteBuffer buffer, final long size, final long offset,
 			final FileInfoWrapper info) {
@@ -142,25 +153,39 @@ public class FuseYurl extends FuseFilesystemAdapterFull {
 	public int readdir(final String path, final DirectoryFiller filler) {
 		if ("/".equals(path)) {
 			List<String> l = new LinkedList<String>();
-			l.addAll(dirs(FuseYurl.categoriesTreeCache));
+			l.add("root");//dirs(FuseYurl.categoriesTreeCache));
 			filler.add(l);
 			System.out.println("FuseYurl.readdir() items = " + l);
 			return 0;
-		} else 
-		{
-		filler.add(filename);
-		filler.add("sridhar.txt");
-		List<String> l = new LinkedList<String>();
-		l.addAll(files(items));
-//		l.addAll(dirs(items));
-//		filler.add(l.subList(1, 2));
-		filler.add(l);
-		System.out.println("FuseYurl.readdir() items = " + l);
-		return 0;
+		} else {
+			filler.add(filename);
+			List<String> l = new LinkedList<String>();
+			JSONObject items;
+			if ("/".equals(path)) {
+				items = FuseYurl.items;
+			}
+			else {
+				// Temporary. Delete this
+				if (FuseYurl.categoryPathsToItemsInCategory == null) {
+					FuseYurl.categoryPathsToItemsInCategory = ImmutableMap.of();
+				}
+				items = FuseYurl.categoryPathsToItemsInCategory.get(path);
+			}
+//			l.addAll(files(items));
+			// Add subdirectories
+			{
+				System.out.println("FuseYurl.readdir() - all paths in subdirectory map are: " + categoryPathsToSubcategories.keySet());
+				System.out.println("FuseYurl.readdir() - getting subdirectories of " + path);
+				List<String> c = categoryPathsToSubcategories.get(path);
+				l.addAll(c);
+			}
+			filler.add(l);
+			System.out.println("FuseYurl.readdir() items = " + l);
+			return 0;
 		}
 	}
 
-	private List<String> files(JSONObject items) {
+	private static List<String> files(JSONObject items) {
 		JSONArray a = items.getJSONArray("38044");
 		List<String> l = new LinkedList<String>();
 		for (int i = 0; i < a.length(); i++) {
@@ -172,8 +197,8 @@ public class FuseYurl extends FuseFilesystemAdapterFull {
 		return ImmutableList.copyOf(l);
 	}
 
-	private List<String> dirs(JSONObject items) {
-		JSONArray a = FuseYurl.categoriesTreeCache.getJSONArray("children");
+	private static List<String> dirs(JSONObject categoriesTreeCache) {
+		JSONArray a = categoriesTreeCache.getJSONArray("children");
 		List<String> l = new LinkedList<String>();
 		for (int i = 0; i < a.length(); i++) {
 			JSONObject o = a.getJSONObject(i);
@@ -186,209 +211,15 @@ public class FuseYurl extends FuseFilesystemAdapterFull {
 
 	private static class Yurl {
 
-		private static final Object JSON_OBJECT_NULL = new Null();
-
 		private static final String CYPHER_URI = "http://netgear.rohidekar.com:7474/db/data/cypher";
 
 		private static boolean isNotNull(Object val) {
 			return val != null && !("null".equals(val)) && !(val.getClass().equals(JSON_OBJECT_NULL));
 		}
 
-		private static final class Null {
-			@Override
-			protected final Object clone() {
-				return this;
-			}
-
-			@Override
-			public boolean equals(Object object) {
-				return object == null || object == this;
-			}
-
-			public String toString() {
-				return "null";
-			}
-		}
-
-		private static class CategoryTree {
-			static JSONObject getCategoriesTree(Integer rootId) throws JSONException, IOException {
-				return new AddSizes(
-				// This is the expensive query, not the other one
-						getCategorySizes(FuseYurl.Yurl.execute(
-								"START n=node(*) MATCH n-->u WHERE has(n.name) "
-										+ "RETURN id(n),count(u);",
-								ImmutableMap.<String, Object> of(),
-								"getCategoriesTree() [The expensive query]").getJSONArray("data")))
-						.apply(
-						// Path to JSON conversion done in Cypher
-						createCategoryTreeFromCypherResultPaths(
-								// TODO: I don't think we need each path do we?
-								// We
-								// just need each parent-child relationship.
-								FuseYurl.Yurl.execute("START n=node({parentId}) "
-										+ "MATCH path=n-[r:CONTAINS*]->c " + "WHERE has(c.name) "
-										+ "RETURN extract(p in nodes(path)| " + "'{ "
-										+ "id : ' + id(p) + ', " + "name : \"'+ p.name +'\" , "
-										+ "key : \"' + coalesce(p.key, '') + '\"" + " }'" + ")",
-										ImmutableMap.<String, Object> of("parentId", rootId),
-										"getCategoriesTree() - [getting all paths 3]"), rootId));
-			}
-
-			private static Map<Integer, Integer> getCategorySizes(JSONArray counts) {
-				Map<Integer, Integer> sizesMap = new HashMap<Integer, Integer>();
-				for (int i = 0; i < counts.length(); i++) {
-					JSONArray row = counts.getJSONArray(i);
-					sizesMap.put(row.getInt(0), row.getInt(1));
-				}
-				return ImmutableMap.copyOf(sizesMap);
-			}
-
-			private static JSONObject addSizesToCypherJsonResultObjects(JSONObject categoriesTree,
-					Map<Integer, Integer> categorySizes) {
-				Integer id = categoriesTree.getInt("id");
-				categoriesTree.put("size", categorySizes.get(id));
-				if (categoriesTree.has("children")) {
-					JSONArray children = categoriesTree.getJSONArray("children");
-					for (int i = 0; i < children.length(); i++) {
-						addSizesToCypherJsonResultObjects(children.getJSONObject(i), categorySizes);
-					}
-				}
-				return categoriesTree;
-			}
-
-			private static class AddSizes implements Function<JSONObject, JSONObject> {
-				private final Map<Integer, Integer> categorySizes;
-
-				AddSizes(Map<Integer, Integer> categorySizes) {
-					this.categorySizes = categorySizes;
-				}
-
-				@Override
-				public JSONObject apply(JSONObject input) {
-					return addSizesToCypherJsonResultObjects(input, categorySizes);
-				}
-			}
-
-			private static JSONObject createCategoryTreeFromCypherResultPaths(
-					JSONObject theQueryJsonResult, Integer rootId) {
-				JSONArray cypherRawResults = theQueryJsonResult.getJSONArray("data");
-				checkState(cypherRawResults.length() > 0);
-				Multimap<Integer, Integer> parentToChildren = buildParentToChildMultimap2(cypherRawResults);
-				Map<Integer, JSONObject> categoryNodesWithoutChildren = createId(cypherRawResults);
-				JSONObject root = categoryNodesWithoutChildren.get(rootId);
-				root.put(
-						"children",
-						toJsonArray(buildChildren(parentToChildren.get(rootId),
-								categoryNodesWithoutChildren, parentToChildren)));
-				return root;
-			}
-
-			/**
-			 * @return - a pair for each category node
-			 */
-			private static Map<Integer, JSONObject> createId(JSONArray cypherRawResults) {
-				ImmutableMap.Builder<Integer, JSONObject> idToJsonBuilder = ImmutableMap
-						.<Integer, JSONObject> builder();
-				Set<Integer> seen = new HashSet<Integer>();
-				for (int i = 0; i < cypherRawResults.length(); i++) {
-					JSONArray treePath = cypherRawResults.getJSONArray(i).getJSONArray(0);
-					for (int j = 0; j < treePath.length(); j++) {
-						if (treePath.get(j).getClass().equals(JSON_OBJECT_NULL)) {
-							continue;
-						}
-						JSONObject pathHopNode = new JSONObject(treePath.getString(j));// treePath.getString(j));
-						int categoryId = pathHopNode.getInt("id");
-						if (!seen.contains(categoryId)) {
-							seen.add(categoryId);
-							idToJsonBuilder.put(categoryId, pathHopNode);
-						}
-					}
-				}
-				return idToJsonBuilder.build();
-			}
-
-			private static JSONArray removeNulls(JSONArray iJsonArray) {
-				for (int i = 0; i < iJsonArray.length(); i++) {
-					if (JSON_OBJECT_NULL.equals(iJsonArray.get(i))) {
-						iJsonArray.remove(i);
-						--i;
-					}
-				}
-				return iJsonArray;
-			}
-
-			/**
-			 * @return Integer to set of Integers
-			 */
-			private static Multimap<Integer, Integer> buildParentToChildMultimap2(
-					JSONArray cypherRawResults) {
-				Multimap<Integer, Integer> oParentToChildren = HashMultimap.create();
-				getParentChildrenMap: {
-					for (int pathNum = 0; pathNum < cypherRawResults.length(); pathNum++) {
-						JSONArray categoryPath = removeNulls(cypherRawResults.getJSONArray(pathNum)
-								.getJSONArray(0));
-						for (int hopNum = 0; hopNum < categoryPath.length() - 1; hopNum++) {
-							if (categoryPath.get(hopNum).getClass().equals(JSON_OBJECT_NULL)) {
-								continue;
-							}
-							if (categoryPath.get(hopNum + 1).getClass().equals(JSON_OBJECT_NULL)) {
-								continue;
-							}
-							if (!(categoryPath.get(hopNum + 1) instanceof String)) {
-								continue;
-							}
-							int childId = new JSONObject(categoryPath.getString(hopNum + 1))
-									.getInt("id");
-							int parentId = checkNotNull(new JSONObject(
-									categoryPath.getString(hopNum)).getInt("id"));
-							Object childrenObj = oParentToChildren.get(parentId);
-							if (childrenObj != null) {
-								Set<?> children = (Set<?>) childrenObj;
-								if (!children.contains(childId)) {
-									oParentToChildren.put(parentId, childId);
-								}
-							} else {
-								oParentToChildren.put(parentId, childId);
-							}
-						}
-					}
-				}
-				return oParentToChildren;
-			}
-
-			private static JSONArray toJsonArray(Collection<JSONObject> children) {
-				JSONArray arr = new JSONArray();
-				for (JSONObject child : children) {
-					arr.put(child);
-				}
-				return arr;
-			}
-
-			private static Set<JSONObject> buildChildren(Collection<Integer> childIds,
-					Map<Integer, JSONObject> nodes, Multimap<Integer, Integer> parentToChildren) {
-				Builder<JSONObject> set = ImmutableSet.builder();
-				for (int childId : childIds) {
-					JSONObject childJson = nodes.get(childId);
-					Collection<Integer> grandchildIds = parentToChildren.get(childId);
-					Collection<JSONObject> grandchildNodes = buildChildren(grandchildIds, nodes,
-							parentToChildren);
-					JSONArray grandchildrenArray = toJsonArray(grandchildNodes);
-					childJson.put("children", grandchildrenArray);
-					set.add(childJson);
-				}
-				return set.build();
-			}
-		}
-
-		private static final Integer ROOT_ID = 45;
-
 		static JSONObject getItemsAtLevelAndChildLevels(Integer iRootId) throws JSONException,
 				IOException {
-			// System.out.println("getItemsAtLevelAndChildLevels() - " +
-			// iRootId);
-			if (FuseYurl.categoriesTreeCache == null) {
-				FuseYurl.categoriesTreeCache = CategoryTree.getCategoriesTree(iRootId);
-			}
+			
 			// TODO: the source is null clause should be obsoleted
 			JSONObject theQueryResultJson = FuseYurl.Yurl.execute(
 					"START source=node({rootId}) "
@@ -537,5 +368,223 @@ public class FuseYurl extends FuseFilesystemAdapterFull {
 			return new JSONObject(theNeo4jResponse);
 		}
 
+	}
+
+	private static class CategoryPathsToSubcategories {
+	
+		public static Map<String, List<String>> build(JSONObject categoriesTreeCache, String prefix) {
+			String categoryName = categoriesTreeCache.getString("name");
+			JSONArray a = categoriesTreeCache.getJSONArray("children");
+			List<String> immediateChildrenNames = getNames(a);
+			Map<String, List<String>> ret = new HashMap<String, List<String>>();
+			String key = prefix + "/" + categoryName;
+			// Immediate children
+			ret.put(key, immediateChildrenNames);
+			// recursive
+			for (int i = 0; i < a.length(); i++) {
+				JSONObject subdir = a.getJSONObject(i);
+				ret.putAll(build(subdir, key));
+			}
+			System.out.println("FuseYurl.Yurl.CategoryPathsToSubcategories.build() - " + key + " :: " + immediateChildrenNames);
+			if ("".equals(prefix)) {
+				ret.put("", ImmutableList.of(categoryName));
+			}
+			return ret;
+		}
+
+		private static List<String> getNames(JSONArray a) {
+			List<String> immediateChildrenNames = new LinkedList<String>();
+			for (int i = 0; i < a.length(); i++) {
+				JSONObject subdir = a.getJSONObject(i);
+				immediateChildrenNames.add(subdir.getString("name"));
+			}
+			return immediateChildrenNames;
+		}
+	}
+
+	private static class CategoryTree {
+		static JSONObject getCategoriesTree(Integer rootId) throws JSONException, IOException {
+			return new AddSizes(
+			// This is the expensive query, not the other one
+					getCategorySizes(FuseYurl.Yurl.execute(
+							"START n=node(*) MATCH n-->u WHERE has(n.name) "
+									+ "RETURN id(n),count(u);",
+							ImmutableMap.<String, Object> of(),
+							"getCategoriesTree() [The expensive query]").getJSONArray("data")))
+					.apply(
+					// Path to JSON conversion done in Cypher
+					createCategoryTreeFromCypherResultPaths(
+							// TODO: I don't think we need each path do we?
+							// We
+							// just need each parent-child relationship.
+							FuseYurl.Yurl.execute("START n=node({parentId}) "
+									+ "MATCH path=n-[r:CONTAINS*]->c " + "WHERE has(c.name) "
+									+ "RETURN extract(p in nodes(path)| " + "'{ "
+									+ "id : ' + id(p) + ', " + "name : \"'+ p.name +'\" , "
+									+ "key : \"' + coalesce(p.key, '') + '\"" + " }'" + ")",
+									ImmutableMap.<String, Object> of("parentId", rootId),
+									"getCategoriesTree() - [getting all paths 3]"), rootId));
+		}
+	
+		private static Map<Integer, Integer> getCategorySizes(JSONArray counts) {
+			Map<Integer, Integer> sizesMap = new HashMap<Integer, Integer>();
+			for (int i = 0; i < counts.length(); i++) {
+				JSONArray row = counts.getJSONArray(i);
+				sizesMap.put(row.getInt(0), row.getInt(1));
+			}
+			return ImmutableMap.copyOf(sizesMap);
+		}
+	
+		private static JSONObject addSizesToCypherJsonResultObjects(JSONObject categoriesTree,
+				Map<Integer, Integer> categorySizes) {
+			Integer id = categoriesTree.getInt("id");
+			categoriesTree.put("size", categorySizes.get(id));
+			if (categoriesTree.has("children")) {
+				JSONArray children = categoriesTree.getJSONArray("children");
+				for (int i = 0; i < children.length(); i++) {
+					addSizesToCypherJsonResultObjects(children.getJSONObject(i), categorySizes);
+				}
+			}
+			return categoriesTree;
+		}
+	
+		private static class AddSizes implements Function<JSONObject, JSONObject> {
+			private final Map<Integer, Integer> categorySizes;
+	
+			AddSizes(Map<Integer, Integer> categorySizes) {
+				this.categorySizes = categorySizes;
+			}
+	
+			@Override
+			public JSONObject apply(JSONObject input) {
+				return addSizesToCypherJsonResultObjects(input, categorySizes);
+			}
+		}
+	
+		private static JSONObject createCategoryTreeFromCypherResultPaths(
+				JSONObject theQueryJsonResult, Integer rootId) {
+			JSONArray cypherRawResults = theQueryJsonResult.getJSONArray("data");
+			checkState(cypherRawResults.length() > 0);
+			Multimap<Integer, Integer> parentToChildren = buildParentToChildMultimap2(cypherRawResults);
+			Map<Integer, JSONObject> categoryNodesWithoutChildren = createId(cypherRawResults);
+			JSONObject root = categoryNodesWithoutChildren.get(rootId);
+			root.put(
+					"children",
+					toJsonArray(buildChildren(parentToChildren.get(rootId),
+							categoryNodesWithoutChildren, parentToChildren)));
+			return root;
+		}
+	
+		/**
+		 * @return - a pair for each category node
+		 */
+		private static Map<Integer, JSONObject> createId(JSONArray cypherRawResults) {
+			ImmutableMap.Builder<Integer, JSONObject> idToJsonBuilder = ImmutableMap
+					.<Integer, JSONObject> builder();
+			Set<Integer> seen = new HashSet<Integer>();
+			for (int i = 0; i < cypherRawResults.length(); i++) {
+				JSONArray treePath = cypherRawResults.getJSONArray(i).getJSONArray(0);
+				for (int j = 0; j < treePath.length(); j++) {
+					if (treePath.get(j).getClass().equals(JSON_OBJECT_NULL)) {
+						continue;
+					}
+					JSONObject pathHopNode = new JSONObject(treePath.getString(j));// treePath.getString(j));
+					int categoryId = pathHopNode.getInt("id");
+					if (!seen.contains(categoryId)) {
+						seen.add(categoryId);
+						idToJsonBuilder.put(categoryId, pathHopNode);
+					}
+				}
+			}
+			return idToJsonBuilder.build();
+		}
+	
+		private static JSONArray removeNulls(JSONArray iJsonArray) {
+			for (int i = 0; i < iJsonArray.length(); i++) {
+				if (JSON_OBJECT_NULL.equals(iJsonArray.get(i))) {
+					iJsonArray.remove(i);
+					--i;
+				}
+			}
+			return iJsonArray;
+		}
+	
+		/**
+		 * @return Integer to set of Integers
+		 */
+		private static Multimap<Integer, Integer> buildParentToChildMultimap2(
+				JSONArray cypherRawResults) {
+			Multimap<Integer, Integer> oParentToChildren = HashMultimap.create();
+			getParentChildrenMap: {
+				for (int pathNum = 0; pathNum < cypherRawResults.length(); pathNum++) {
+					JSONArray categoryPath = removeNulls(cypherRawResults.getJSONArray(pathNum)
+							.getJSONArray(0));
+					for (int hopNum = 0; hopNum < categoryPath.length() - 1; hopNum++) {
+						if (categoryPath.get(hopNum).getClass().equals(JSON_OBJECT_NULL)) {
+							continue;
+						}
+						if (categoryPath.get(hopNum + 1).getClass().equals(JSON_OBJECT_NULL)) {
+							continue;
+						}
+						if (!(categoryPath.get(hopNum + 1) instanceof String)) {
+							continue;
+						}
+						int childId = new JSONObject(categoryPath.getString(hopNum + 1))
+								.getInt("id");
+						int parentId = checkNotNull(new JSONObject(
+								categoryPath.getString(hopNum)).getInt("id"));
+						Object childrenObj = oParentToChildren.get(parentId);
+						if (childrenObj != null) {
+							Set<?> children = (Set<?>) childrenObj;
+							if (!children.contains(childId)) {
+								oParentToChildren.put(parentId, childId);
+							}
+						} else {
+							oParentToChildren.put(parentId, childId);
+						}
+					}
+				}
+			}
+			return oParentToChildren;
+		}
+	
+		private static JSONArray toJsonArray(Collection<JSONObject> children) {
+			JSONArray arr = new JSONArray();
+			for (JSONObject child : children) {
+				arr.put(child);
+			}
+			return arr;
+		}
+	
+		private static Set<JSONObject> buildChildren(Collection<Integer> childIds,
+				Map<Integer, JSONObject> nodes, Multimap<Integer, Integer> parentToChildren) {
+			Builder<JSONObject> set = ImmutableSet.builder();
+			for (int childId : childIds) {
+				JSONObject childJson = nodes.get(childId);
+				Collection<Integer> grandchildIds = parentToChildren.get(childId);
+				Collection<JSONObject> grandchildNodes = buildChildren(grandchildIds, nodes,
+						parentToChildren);
+				JSONArray grandchildrenArray = toJsonArray(grandchildNodes);
+				childJson.put("children", grandchildrenArray);
+				set.add(childJson);
+			}
+			return set.build();
+		}
+	}
+
+	private static final class Null {
+		@Override
+		protected final Object clone() {
+			return this;
+		}
+	
+		@Override
+		public boolean equals(Object object) {
+			return object == null || object == this;
+		}
+	
+		public String toString() {
+			return "null";
+		}
 	}
 }
