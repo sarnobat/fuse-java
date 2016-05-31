@@ -72,7 +72,7 @@ public class FuseYurl extends FuseFilesystemAdapterFull {
 				FuseYurl.categoryIdToName = CategoryIdToName.build(FuseYurl.categoriesTreeCache, "");
 				FuseYurl.categoryPathToId = CategoryPathToId.build(FuseYurl.categoriesTreeCache, "");
 			}
-			items = Yurl.getItemsAtLevelAndChildLevels(45);
+			items = Yurl.getItemsAtLevelAndChildLevels(ROOT_ID);
 			FuseYurl.categoryPathsToItemsInCategory = CategoryPathsToItems
 					.build(items, "", FuseYurl.categoryIdToName);
 //			System.out.println("FuseYurl.main() items = " + items);
@@ -91,19 +91,31 @@ public class FuseYurl extends FuseFilesystemAdapterFull {
 			Map<String, JSONObject> ret = new HashMap<String, JSONObject>();
 			for (String categoryId : items.keySet()) {
 				String categoryName = categoryIdToName.get(categoryId);
-				System.out.println("FuseYurl.CategoryPathsToItems.build() - categoryId = "
-						+ categoryId + " (" + categoryName + ")");
+//				System.out.println("FuseYurl.CategoryPathsToItems.build() - categoryId = "
+//						+ categoryId + " (" + categoryName + ")");
 				String key = path + "/" + categoryName;
 				if (!FuseYurl.categoryPathToId.keySet().contains(key)) {
 					key = FuseYurl.categoryPathToId.inverse().get(categoryId);
 				}
-				ret.put(key, items);
+System.out.println("FuseYurl.CategoryPathsToItems.build() - path = " + key);
+				if (key.startsWith("/root/products and services/DVD and video/Soccer")) {
+					System.out.println("FuseYurl.CategoryPathsToItems.build()");
+				}
+				if (categoryId.equals(ROOT_ID)) {
+					ret.put(key, items);
+				} else {
+//					System.out.println("FuseYurl.CategoryPathsToItems.build() - " + items.get(cate));
+					JSONArray arr = items.getJSONArray(categoryId);
+					JSONObject o = new JSONObject();
+					o.put(categoryId, arr);
+					ret.put(key, o);
+				}
+				
 			}
 			return ret;
 		}
 	}
 
-	final String filename = "/hello1.txt";
 	final String contents = "Hello World!\n";
 
 	@Override
@@ -124,7 +136,7 @@ public class FuseYurl extends FuseFilesystemAdapterFull {
 		String f = Paths.get(path).getFileName().toString();
 		boolean contains = files(FuseYurl.items).contains(f);
 		try {
-			if (contains || path.equals(filename)) {
+			if (contains) {
 				stat.setMode(NodeType.FILE).size(contents.length());
 				return 0;
 			}
@@ -139,7 +151,7 @@ public class FuseYurl extends FuseFilesystemAdapterFull {
 			} else {
 				checkNotNull(fileName2);
 				checkNotNull(fileName3);
-				if (contains || path.equals(filename)) {
+				if (contains) {
 					stat.setMode(NodeType.FILE).size(contents.length());
 					return 0;
 				}
@@ -174,55 +186,44 @@ public class FuseYurl extends FuseFilesystemAdapterFull {
 			System.out.println("FuseYurl.readdir() items = " + l);
 			return 0;
 		} else {
-			filler.add(filename);
 			List<String> l = new LinkedList<String>();
-			JSONObject items;
-//			if ("/".equals(path)) {
-//				items = FuseYurl.items;
-//			}
-//			else {
-//				// Temporary. Delete this
-//				if (FuseYurl.categoryPathsToItemsInCategory == null) {
-//					FuseYurl.categoryPathsToItemsInCategory = ImmutableMap.of();
-//				}
-				items = FuseYurl.categoryPathsToItemsInCategory.get(path);
-//			}
+			JSONObject items = FuseYurl.categoryPathsToItemsInCategory.get(path);
+			
+			if (path.startsWith("/root/products and services/DVD and video/Soccer")) {
+				System.out.println("FuseYurl.readdir()");
+			}
 			if (items == null) {
 				System.out.println("FuseYurl.readdir() dir to items = " + FuseYurl.categoryPathsToItemsInCategory.keySet());
 				System.out.println("FuseYurl.readdir() path = " + path);
 				
-				// TODO: Move this to a sooner point.
+				// TODO: Move this to a sooner point?
 				// populate
-				{				
-					try {
-						JSONObject ite = Yurl.getItemsAtLevelAndChildLevels(Integer
-								.parseInt(FuseYurl.categoryPathToId.get(path)));
-						Map<String, JSONObject> build = CategoryPathsToItems.build(
-								ite, path, FuseYurl.categoryIdToName);
-						System.out.println("FuseYurl.readdir() build.keySet() = " + build.keySet());
-						FuseYurl.categoryPathsToItemsInCategory.putAll(build);
-						items = FuseYurl.categoryPathsToItemsInCategory.get(path);
-						checkNotNull(items);
-					} catch (NumberFormatException e) {
-						e.printStackTrace();
-					} catch (JSONException e) {
-						e.printStackTrace();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
+				try {
+					JSONObject ite = Yurl.getItemsAtLevelAndChildLevels(Integer
+							.parseInt(FuseYurl.categoryPathToId.get(path)));
+					Map<String, JSONObject> build = CategoryPathsToItems.build(ite, path,
+							FuseYurl.categoryIdToName);
+					System.out.println("FuseYurl.readdir() build.keySet() = " + build.keySet());
+					FuseYurl.categoryPathsToItemsInCategory.putAll(build);
+					items = FuseYurl.categoryPathsToItemsInCategory.get(path);
+					checkNotNull(items);
+				} catch (NumberFormatException e) {
+					e.printStackTrace();
+				} catch (JSONException e) {
+					e.printStackTrace();
+				} catch (IOException e) {
+					e.printStackTrace();
 				}
 			}
 					
 			l.addAll(files(items));
 			// Add subdirectories
-			System.out.println("FuseYurl.readdir() - all paths in subdirectory map are: "
-					+ categoryPathsToSubcategories.keySet());
 			System.out.println("FuseYurl.readdir() - getting subdirectories of " + path);
 			List<String> c = categoryPathsToSubcategories.get(path);
 			l.addAll(c);
 			filler.add(l);
-			System.out.println("FuseYurl.readdir() path = " + path);
-			System.out.println("FuseYurl.readdir() files = " + files(items));
+//			System.out.println("FuseYurl.readdir() path = " + path);
+//			System.out.println("FuseYurl.readdir() files = " + files(items));
 			return 0;
 		}
 	}
