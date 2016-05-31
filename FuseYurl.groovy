@@ -193,7 +193,6 @@ System.out.println("FuseYurl.CategoryPathsToItems.build() - path = " + key);
 				System.out.println("FuseYurl.readdir()");
 			}
 			if (items == null) {
-				System.out.println("FuseYurl.readdir() dir to items = " + FuseYurl.categoryPathsToItemsInCategory.keySet());
 				System.out.println("FuseYurl.readdir() path = " + path);
 				
 				// TODO: Move this to a sooner point?
