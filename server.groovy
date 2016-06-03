@@ -270,7 +270,7 @@ System.out.println("FuseYurl.CategoryPathsToItems.build() - path = " + key);
 							// TODO : do not hardcode the limit to 500. Category
 							// 38044 doesn't display more than 50 books since
 							// there are so many child items.
-							+ "ORDER BY u.ordinal DESC LIMIT 500", ImmutableMap
+							+ "", ImmutableMap
 							.<String, Object> builder().put("rootId", iRootId).build(),
 					"getItemsAtLevelAndChildLevels()");
 			JSONArray theDataJson = (JSONArray) theQueryResultJson.get("data");
