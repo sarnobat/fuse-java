@@ -97,10 +97,7 @@ public class FuseYurl extends FuseFilesystemAdapterFull {
 				if (!FuseYurl.categoryPathToId.keySet().contains(key)) {
 					key = FuseYurl.categoryPathToId.inverse().get(categoryId);
 				}
-System.out.println("FuseYurl.CategoryPathsToItems.build() - path = " + key);
-				if (key.startsWith("/root/products and services/DVD and video/Soccer")) {
-					System.out.println("FuseYurl.CategoryPathsToItems.build()");
-				}
+				//System.out.println("CategoryPathsToItems.build() - items in category " + categoryId + " = " + items.length());
 				if (categoryId.equals(ROOT_ID)) {
 					ret.put(key, items);
 				} else {
@@ -120,10 +117,6 @@ System.out.println("FuseYurl.CategoryPathsToItems.build() - path = " + key);
 
 	@Override
 	public int getattr(final String path, final StatWrapper stat) {
-//		System.out.println("FuseYurl.getattr()");
-//		System.out.println("FuseYurl.getattr() path = " + path);
-//		System.out.println("FuseYurl.getattr() Paths.get(path).getFileName() = " + Paths.get(path).getFileName());
-//		System.out.println("FuseYurl.getattr() files = " + files(items));
 		
 		if ("._.".equals(path)) {
 			return -ErrorCodes.ENOENT();
@@ -213,6 +206,7 @@ System.out.println("FuseYurl.CategoryPathsToItems.build() - path = " + key);
 			}
 					
 			l.addAll(files(items));
+			System.out.println("FuseYurl.readdir() - Distinct files = " + ImmutableSet.copyOf(files(items)).size());
 			// Add subdirectories
 			List<String> c = categoryPathsToSubcategories.get(path);
 			l.addAll(c);
@@ -227,13 +221,17 @@ System.out.println("FuseYurl.CategoryPathsToItems.build() - path = " + key);
 		if (items.keySet().size() > 0) {
 			String next = (String) items.keySet().iterator().next();
 			JSONArray a = items.getJSONArray(next);
+//			System.out.println("files() - all items in " +next+  " = " + a.length());
+			int j = 0;
 			for (int i = 0; i < a.length(); i++) {
 				JSONObject o = a.getJSONObject(i);
 				if (o.has("title") && o.getString("title").length() > 0) {
 					l.add(o.getString("title"));
 //					System.out.println("FuseYurl.files() title = " + o.getString("title"));
+					++j;
 				}
 			}
+//			System.out.println("files() - added = " + j);	
 		}
 		return ImmutableList.copyOf(l);
 	}
@@ -264,7 +262,7 @@ System.out.println("FuseYurl.CategoryPathsToItems.build() - path = " + key);
 			// TODO: the source is null clause should be obsoleted
 			JSONObject theQueryResultJson = FuseYurl.Yurl.execute(
 					"START source=node({rootId}) "
-							+ "MATCH p = source-[r:CONTAINS*1..2]->u "
+							+ "MATCH p = source-[r:CONTAINS]->u "
 							+ "WHERE (source is null or ID(source) = {rootId}) and not(has(u.type)) AND id(u) > 0  "
 							+ "RETURN distinct ID(u),u.title,u.url, extract(n in nodes(p) | id(n)) as path,u.downloaded_video,u.downloaded_image,u.created,u.ordinal, u.biggest_image, u.user_image "
 							// TODO : do not hardcode the limit to 500. Category
@@ -275,6 +273,7 @@ System.out.println("FuseYurl.CategoryPathsToItems.build() - path = " + key);
 					"getItemsAtLevelAndChildLevels()");
 			JSONArray theDataJson = (JSONArray) theQueryResultJson.get("data");
 			JSONArray theUncategorizedNodesJson = new JSONArray();
+			System.out.println("Found " + theDataJson.length() + " urls.");
 			for (int i = 0; i < theDataJson.length(); i++) {
 				JSONObject anUncategorizedNodeJsonObject = new JSONObject();
 				_1: {
