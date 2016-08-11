@@ -24,6 +24,7 @@ import net.fusejna.StructStat.StatWrapper;
 import net.fusejna.types.TypeMode.NodeType;
 import net.fusejna.util.FuseFilesystemAdapterFull;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -151,12 +152,13 @@ System.out.println("FuseYurl.CategoryPathsToItems.build() - path = " + key);
 			} else {
 				checkNotNull(fileName2);
 				checkNotNull(fileName3);
-				if (contains) {
+//				if (contains) {
 					stat.setMode(NodeType.FILE).size(contents.length());
 					return 0;
-				}
+//				}
 			}
-			return -ErrorCodes.ENOENT();
+//			System.err.println("FuseYurl.getattr()" + path);
+//			return -ErrorCodes.ENOENT();
 		} catch (Exception e) {
 			e.printStackTrace();
 			return -ErrorCodes.ENOENT();
@@ -186,39 +188,94 @@ System.out.println("FuseYurl.CategoryPathsToItems.build() - path = " + key);
 			System.out.println("FuseYurl.readdir() items = " + l);
 			return 0;
 		} else {
-			List<String> l = new LinkedList<String>();
-			JSONObject items = FuseYurl.categoryPathsToItemsInCategory.get(path);
-			if (items == null) {
-				
-				// TODO: Move this to a sooner point?
-				// populate
-				try {
-					JSONObject ite = Yurl.getItemsAtLevelAndChildLevels(Integer
-							.parseInt(FuseYurl.categoryPathToId.get(path)));
-					Map<String, JSONObject> build = CategoryPathsToItems.build(ite, path,
-							FuseYurl.categoryIdToName);
-					FuseYurl.categoryPathsToItemsInCategory.putAll(build);
-					items = FuseYurl.categoryPathsToItemsInCategory.get(path);
-					if (items == null) {
-						System.out.println("FuseYurl.readdir() no items for path " + path);
-						items = new JSONObject();
+//			List<String> l = new LinkedList<String>();
+			List<String> files = files(getItems(path));
+			int max = Integer.MAX_VALUE;// 3155 too large (but later ok)
+			// 3100 ok
+//			if (files.size() > max) {
+//				System.out.println("FuseYurl.readdir() truncating");
+//				filler.add(files.subList(0, max));
+//			} else {
+//				System.err.println("FuseYurl.readdir() not truncating");
+			System.out.println("FuseYurl.readdir() files.size = " + files.size());
+//			StringBuffer all = new StringBuffer();
+				int i = 1;
+				for (String f : files) {
+					if (f.trim().length() == 0) {
+						continue;
 					}
-				} catch (NumberFormatException e) {
-					e.printStackTrace();
-				} catch (JSONException e) {
-					e.printStackTrace();
-				} catch (IOException e) {
-					e.printStackTrace();
+					String string = i + "  " + f.substring(0,Math.min(f.length(),230));
+					++i;
+					if (!filler.add(string)) {
+						System.err.println("FuseYurl.readdir() - failed" + string);
+						return ErrorCodes.ENOMEM();
+					}
+//					all.append(string).append("\n");
+//					System.out.println("FuseYurl.readdir() " + string);
 				}
+//				l.addAll(files.subList(0, files.size()* 2/3));
+//			}
+			System.out.println("FuseYurl.readdir() files = " + files.size());
+//			try {
+//				FileUtils.write(Paths.get("/Users/sarnobat/trash/yurl_titles.txt").toFile(), all.toString());
+//			} catch (IOException e) {
+//				e.printStackTrace();
+//			}
+//			System.out.println("FuseYurl.readdir() 1 - " + l.size());
+			if (path.endsWith("root")) {
+				List<String> l2 = new LinkedList<String>();
+//				for (int i = 0; i < 3000; i++) {
+//					l2.add(i + "sridhar.txt");
+//				}
+//				l.addAll(l2);
 			}
-					
-			l.addAll(files(items));
+//			System.out.println("FuseYurl.readdir() 2 - " + l.size());
 			// Add subdirectories
-			List<String> c = categoryPathsToSubcategories.get(path);
-			l.addAll(c);
-			filler.add(l);
+			List<String> cs = categoryPathsToSubcategories.get(path);
+			if (cs.size() == 0) {
+				System.err.println("FuseYurl.readdir() No subcategories under " + path);
+			}
+			int k = 1;
+			for (String c : cs) {
+				String cf = k +"::"+c;
+				++k;
+//				System.out.println("FuseYurl.readdir() " + cf);
+				if (!filler.add(c)) {
+//					System.err.println("FuseYurl.readdir() - problem adding categories");
+					return ErrorCodes.ENOMEM();
+				}
+				
+			}
 			return 0;
 		}
+	}
+
+	private JSONObject getItems(final String path) {
+		JSONObject items = FuseYurl.categoryPathsToItemsInCategory.get(path);
+		if (items == null) {
+			
+			// TODO: Move this to a sooner point?
+			// populate
+			try {
+				JSONObject ite = Yurl.getItemsAtLevelAndChildLevels(Integer
+						.parseInt(FuseYurl.categoryPathToId.get(path)));
+				Map<String, JSONObject> build = CategoryPathsToItems.build(ite, path,
+						FuseYurl.categoryIdToName);
+				FuseYurl.categoryPathsToItemsInCategory.putAll(build);
+				items = FuseYurl.categoryPathsToItemsInCategory.get(path);
+				if (items == null) {
+					System.out.println("FuseYurl.readdir() no items for path " + path);
+					items = new JSONObject();
+				}
+			} catch (NumberFormatException e) {
+				e.printStackTrace();
+			} catch (JSONException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		return items;
 	}
 
 	private static List<String> files(JSONObject items) {
@@ -264,17 +321,18 @@ System.out.println("FuseYurl.CategoryPathsToItems.build() - path = " + key);
 			// TODO: the source is null clause should be obsoleted
 			JSONObject theQueryResultJson = FuseYurl.Yurl.execute(
 					"START source=node({rootId}) "
-							+ "MATCH p = source-[r:CONTAINS*1..2]->u "
-							+ "WHERE (source is null or ID(source) = {rootId}) and not(has(u.type)) AND id(u) > 0  "
+							+ "MATCH p = source-[r:CONTAINS*1..1]->u "
+							+ "WHERE has(u.title) and (source is null or ID(source) = {rootId}) and not(has(u.type)) AND id(u) > 0  "
 							+ "RETURN distinct ID(u),u.title,u.url, extract(n in nodes(p) | id(n)) as path,u.downloaded_video,u.downloaded_image,u.created,u.ordinal, u.biggest_image, u.user_image "
 							// TODO : do not hardcode the limit to 500. Category
 							// 38044 doesn't display more than 50 books since
 							// there are so many child items.
-							+ "ORDER BY u.ordinal DESC LIMIT 500", ImmutableMap
+							+ " LIMIT 90000", ImmutableMap
 							.<String, Object> builder().put("rootId", iRootId).build(),
 					"getItemsAtLevelAndChildLevels()");
 			JSONArray theDataJson = (JSONArray) theQueryResultJson.get("data");
 			JSONArray theUncategorizedNodesJson = new JSONArray();
+			System.err.println("FuseYurl.Yurl.getItemsAtLevelAndChildLevels() - ("+iRootId+")\tresults = " + theDataJson.length());
 			for (int i = 0; i < theDataJson.length(); i++) {
 				JSONObject anUncategorizedNodeJsonObject = new JSONObject();
 				_1: {
