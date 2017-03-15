@@ -4,6 +4,7 @@ import static com.google.common.base.Preconditions.checkState;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
@@ -59,6 +60,7 @@ public class FuseYurl extends FuseFilesystemAdapterFull {
 	private static final Object JSON_OBJECT_NULL = new Null();
 
 	public static void main(String... args) throws FuseException {
+		System.out.println("FuseYurl.main() args = " + args);
 		// Strange - groovy ignores arg1's hardcoding. Maybe it's not an
 		// acceptable array initialization in groovy?
 		final String[] args1 = args;
@@ -84,7 +86,15 @@ public class FuseYurl extends FuseFilesystemAdapterFull {
 			e.printStackTrace();
 		}
 		root = args[0];
-		new FuseYurl().log(false).mount(args[0]);
+		try {
+			Files.createDirectory(Paths.get(args[0]));
+			new FuseYurl().log(false).mount(args[0]);
+			System.out.println("FuseYurl.main() finished mounting, ready. " + args[0]);
+		} catch (IOException e) {
+			//e.printStackTrace();
+			System.out.println("FuseYurl.main() already mounted, not attempting to mount. " + args[0]);
+			System.exit(-1);
+		}
 	}
 
 	private static class CategoryPathsToItems {
@@ -92,20 +102,13 @@ public class FuseYurl extends FuseFilesystemAdapterFull {
 			Map<String, JSONObject> ret = new HashMap<String, JSONObject>();
 			for (String categoryId : items.keySet()) {
 				String categoryName = categoryIdToName.get(categoryId);
-//				System.out.println("FuseYurl.CategoryPathsToItems.build() - categoryId = "
-//						+ categoryId + " (" + categoryName + ")");
 				String key = path + "/" + categoryName;
 				if (!FuseYurl.categoryPathToId.keySet().contains(key)) {
 					key = FuseYurl.categoryPathToId.inverse().get(categoryId);
 				}
-System.out.println("FuseYurl.CategoryPathsToItems.build() - path = " + key);
-				if (key.startsWith("/root/products and services/DVD and video/Soccer")) {
-					System.out.println("FuseYurl.CategoryPathsToItems.build()");
-				}
 				if (categoryId.equals(ROOT_ID)) {
 					ret.put(key, items);
 				} else {
-//					System.out.println("FuseYurl.CategoryPathsToItems.build() - " + items.get(cate));
 					JSONArray arr = items.getJSONArray(categoryId);
 					JSONObject o = new JSONObject();
 					o.put(categoryId, arr);
@@ -233,7 +236,7 @@ System.out.println("FuseYurl.CategoryPathsToItems.build() - path = " + key);
 			// Add subdirectories
 			List<String> cs = categoryPathsToSubcategories.get(path);
 			if (cs.size() == 0) {
-				System.err.println("FuseYurl.readdir() No subcategories under " + path);
+//				System.err.println("FuseYurl.readdir() No subcategories under " + path);
 			}
 			int k = 1;
 			for (String c : cs) {
@@ -332,7 +335,7 @@ System.out.println("FuseYurl.CategoryPathsToItems.build() - path = " + key);
 					"getItemsAtLevelAndChildLevels()");
 			JSONArray theDataJson = (JSONArray) theQueryResultJson.get("data");
 			JSONArray theUncategorizedNodesJson = new JSONArray();
-			System.err.println("FuseYurl.Yurl.getItemsAtLevelAndChildLevels() - ("+iRootId+")\tresults = " + theDataJson.length());
+//			System.err.println("FuseYurl.Yurl.getItemsAtLevelAndChildLevels() - ("+iRootId+")\tresults = " + theDataJson.length());
 			for (int i = 0; i < theDataJson.length(); i++) {
 				JSONObject anUncategorizedNodeJsonObject = new JSONObject();
 				_1: {
