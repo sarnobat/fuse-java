@@ -28,12 +28,9 @@ import com.google.common.collect.Multimap;
  */
 public class FuseYurl extends FuseFilesystemAdapterFull {
 
-	private static final String URLS = System.getProperty("user.home")
-			+ "/sarnobat.git/db/yurl_flatfile_db/yurl_master.txt";
-	private static final String HIERARCHY = System.getProperty("user.home")
-			+ "/sarnobat.git/db/yurl_flatfile_db/yurl_category_topology.txt";
-	private static final String CATEGORIES = System.getProperty("user.home")
-			+ "/sarnobat.git/db/yurl_flatfile_db/yurl_categories_master.txt";
+	private static final String URLS = System.getProperty("user.home")			+ "/sarnobat.git/db/yurl_flatfile_db/yurl_master.txt";
+	private static final String HIERARCHY = System.getProperty("user.home")			+ "/sarnobat.git/db/yurl_flatfile_db/yurl_category_topology.txt";
+	private static final String CATEGORIES = System.getProperty("user.home")			+ "/sarnobat.git/db/yurl_flatfile_db/yurl_categories_master.txt";
 	private static final Map<String, String> dirName2dirId = new HashMap<String, String>();
 	private static final Map<String, String> dirId2dirName = new HashMap<String, String>();
 	private static final Map<String, String> dirId2ParentId = new HashMap<String, String>();
