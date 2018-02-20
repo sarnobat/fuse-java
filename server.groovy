@@ -8,6 +8,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.ImmutableList;
+
 import net.fusejna.DirectoryFiller;
 import net.fusejna.ErrorCodes;
 import net.fusejna.FuseException;
@@ -21,6 +23,7 @@ import org.apache.commons.io.FileUtils;
 import com.google.common.base.Function;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 
 /**
@@ -36,11 +39,13 @@ public class FuseYurl extends FuseFilesystemAdapterFull {
 	private static final Map<String, String> dirId2ParentId = new HashMap<String, String>();
 	private static final Multimap<String, String> dirId2ChildDirIds = ArrayListMultimap
 			.create();
+	private static final Multimap<String, String> dirId2Urls = ArrayListMultimap
+			.create();
 
 	public static void main(String... args) throws FuseException, IOException {
 		// Strange - groovy ignores arg1's hardcoding. Maybe it's not an
 		// acceptable array initialization in groovy?
-		String string = System.getProperty("user.home") +  "/github/fuse-java/yurl";
+		String string = System.getProperty("user.home") + "/github/fuse-java/yurl";
 		if (new FuseYurl().log(false).isMounted()) {
 			new FuseYurl().log(false).unmount();
 		}
@@ -52,10 +57,8 @@ public class FuseYurl extends FuseFilesystemAdapterFull {
 					try {
 						new FuseYurl().log(false).unmount();
 					} catch (IOException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					} catch (FuseException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 				}
@@ -65,10 +68,28 @@ public class FuseYurl extends FuseFilesystemAdapterFull {
 
 			@Override
 			public void run() {
+
+				try {
+					List<String> l = FileUtils.readLines(Paths.get(URLS)
+							.toFile(), "UTF-8");
+					for (String s : l) {
+						String[] elems = s.split("::");
+						if (elems.length == 3) {
+							dirId2Urls.put(elems[0], elems[1]);
+						}
+					}
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}.start();
+		new Thread() {
+
+			@Override
+			public void run() {
 				try {
 					List<String> l = FileUtils.readLines(Paths.get(CATEGORIES)
 							.toFile(), "UTF-8");
-					System.out.println("FuseYurl.main() " + l);
 					for (Iterator iterator = l.iterator(); iterator.hasNext();) {
 						String string1 = (String) iterator.next();
 						String[] elems = string1.split("::");
@@ -81,46 +102,34 @@ public class FuseYurl extends FuseFilesystemAdapterFull {
 							.toFile(), "UTF-8");
 					for (Iterator iterator = l2.iterator(); iterator.hasNext();) {
 						String string2 = (String) iterator.next();
-						System.out.println("FuseYurl.main() - " + string);
 						String[] elems = string2.split("::");
 						dirId2ParentId.put(elems[1], elems[0]);
 						dirId2ChildDirIds.put(elems[0], elems[1]);
 					}
-					System.out.println("FuseYurl.readdir() " + l);
+					
 				} catch (IOException e) {
 					e.printStackTrace();
-					System.out.println("FuseYurl.main() ERROR - " + e);
+					System.out.println("main() ERROR - " + e);
 				}
 
 			}
 
 		}.start();
-		System.out.println("FuseYurl.main() mounting...");
+		System.out.println("main() mounting...");
 		new FuseYurl().log(false).mount(string);
 	}
 
 	final String filename = "/hello1.txt";
 	final String contents = "Hello World!\n";
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public int readdir(final String path, final DirectoryFiller filler) {
-		System.out.println("readdir() - path = " + path);
-		if (path.equals(File.separator)) {
-
-			Collection<String> s = FluentIterable
-					.from(dirId2ChildDirIds.get("45"))
-					.transform(new Function() {
-
-						@Override
-						public String apply(Object input) {
-							return dirId2dirName.get(input);
-						}
-					}).toList();
-			filler.add(s);
-		} else {
-			System.out.println("FuseYurl.readdir() 2 " + path);
 			String currentDirName = Paths.get(path).getFileName().toString();
 			String currentDirId = dirName2dirId.get(currentDirName);
+			if (path.equals(File.separator)) {
+				currentDirId = "45";
+			}
 			Collection<String> s = FluentIterable
 					.from(dirId2ChildDirIds.get(currentDirId))
 					.transform(new Function() {
@@ -130,28 +139,49 @@ public class FuseYurl extends FuseFilesystemAdapterFull {
 							return dirId2dirName.get(input);
 						}
 					}).toList();
+			Collection<String> s2 = FluentIterable
+					.from(dirId2Urls.get(currentDirId))
+					.transform(new Function() {
 
-			for (String ss : s) {
+						@Override
+						public String apply(Object input) {
+						String string = ((String) input)
+									.replace("http://", "")
+									.replace("https://", "")
+									.replace("www.", "")
+									.replace("-", " ")
+									.replace("_", " ")
+									.replaceFirst("/", " - ")
+									.replace("/", "_") + ".url";
+						return string;
+						}
+					}).toList();
+			for (String ss : Iterables.concat(s, s2)) {
 				if (!filler.add(ss)) {
 					return ErrorCodes.ENOMEM();
 				}
 			}
-
-		}
-		// filler.add("sridhar.txt");
-		// filler.add(filename);
 		return 0;
 	}
 
 	@Override
 	public int getattr(final String path, final StatWrapper stat) {
-	System.out.println("getattr() path = " + path);
 		if (path.equals(File.separator)) { // Root directory
 			stat.setMode(NodeType.DIRECTORY);
 			return 0;
-		} else {
-			//stat.setMode(NodeType.FILE).size(contents.length());
-			stat.setMode(NodeType.DIRECTORY);
+		} else if (path.endsWith(".url")) {
+			
+			// NOTE: du examines actual disk usage, not the size attribute:
+			// https://github.com/restic/restic/issues/442
+			stat.setMode(NodeType.FILE).size(1000000).blksize(1);
+			return 0;
+			
+		}else {
+			// stat.setMode(NodeType.FILE).size(contents.length());
+            
+			String dirName = dirName2dirId.get(path);
+			int count = dirId2Urls.get(dirName).size();
+			stat.setMode(NodeType.DIRECTORY).size(count).blksize(1000000);
 			return 0;
 		}
 		// return -ErrorCodes.ENOENT();
