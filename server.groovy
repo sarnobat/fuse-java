@@ -96,7 +96,7 @@ public class FuseYurl extends FuseFilesystemAdapterFull {
 
 		}.start();
 		System.out.println("FuseYurl.main() mounting...");
-		new FuseYurl().log(true).mount(string);
+		new FuseYurl().log(false).mount(string);
 	}
 
 	final String filename = "/hello1.txt";
@@ -104,7 +104,7 @@ public class FuseYurl extends FuseFilesystemAdapterFull {
 
 	@Override
 	public int readdir(final String path, final DirectoryFiller filler) {
-		System.out.println("FuseYurl.readdir() - path = " + path);
+		System.out.println("readdir() - path = " + path);
 		if (path.equals(File.separator)) {
 
 			Collection<String> s = FluentIterable
