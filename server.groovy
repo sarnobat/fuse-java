@@ -40,7 +40,7 @@ public class FuseYurl extends FuseFilesystemAdapterFull {
 	public static void main(String... args) throws FuseException, IOException {
 		// Strange - groovy ignores arg1's hardcoding. Maybe it's not an
 		// acceptable array initialization in groovy?
-		String string = "/sarnobat.garagebandbroken/Desktop/github-repositories/fuse-java/yurl";
+		String string = System.getProperty("user.home") +  "/github/fuse-java/yurl";
 		if (new FuseYurl().log(false).isMounted()) {
 			new FuseYurl().log(false).unmount();
 		}
@@ -70,8 +70,8 @@ public class FuseYurl extends FuseFilesystemAdapterFull {
 							.toFile(), "UTF-8");
 					System.out.println("FuseYurl.main() " + l);
 					for (Iterator iterator = l.iterator(); iterator.hasNext();) {
-						String string = (String) iterator.next();
-						String[] elems = string.split("::");
+						String string1 = (String) iterator.next();
+						String[] elems = string1.split("::");
 						dirName2dirId.put(elems[1], elems[0]);
 						dirId2dirName.put(elems[0], elems[1]);
 
@@ -80,9 +80,9 @@ public class FuseYurl extends FuseFilesystemAdapterFull {
 					List<String> l2 = FileUtils.readLines(Paths.get(HIERARCHY)
 							.toFile(), "UTF-8");
 					for (Iterator iterator = l2.iterator(); iterator.hasNext();) {
-						String string = (String) iterator.next();
+						String string2 = (String) iterator.next();
 						System.out.println("FuseYurl.main() - " + string);
-						String[] elems = string.split("::");
+						String[] elems = string2.split("::");
 						dirId2ParentId.put(elems[1], elems[0]);
 						dirId2ChildDirIds.put(elems[0], elems[1]);
 					}
@@ -145,10 +145,13 @@ public class FuseYurl extends FuseFilesystemAdapterFull {
 
 	@Override
 	public int getattr(final String path, final StatWrapper stat) {
+	System.out.println("getattr() path = " + path);
 		if (path.equals(File.separator)) { // Root directory
+			stat.setMode(NodeType.DIRECTORY);
 			return 0;
 		} else {
-			stat.setMode(NodeType.FILE).size(contents.length());
+			//stat.setMode(NodeType.FILE).size(contents.length());
+			stat.setMode(NodeType.DIRECTORY);
 			return 0;
 		}
 		// return -ErrorCodes.ENOENT();
