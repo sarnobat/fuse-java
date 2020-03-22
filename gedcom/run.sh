@@ -1,2 +1,2 @@
 mkdir family_tree
-groovy HelloWorldFuse.groovy family_tree
+groovy gedcom_fuse.groovy family_tree
