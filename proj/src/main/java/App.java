@@ -38,17 +38,17 @@ public class App extends FuseFilesystemAdapterFull {
         }
     }
 
-    private static final String filename = "/hello1.txt";
+    private static final String FILENAME = "/hello1.txt";
     private static final String CONTENTS = "Hello World\n";
 
     @Override
-    public int getattr(final String path, final StatWrapper stat) {
+    public int getattr(String path, StatWrapper stat) {
         stat.setAllTimesMillis(System.currentTimeMillis());
         if (path.equals(File.separator)) { // Root directory
             stat.setMode(NodeType.DIRECTORY);
             return 0;
         }
-        if (path.equals(filename)) { // hello.txt
+        if (path.equals(FILENAME)) { // hello.txt
             stat.setMode(NodeType.FILE).size(CONTENTS.length());
             return 0;
         } else {
@@ -59,7 +59,7 @@ public class App extends FuseFilesystemAdapterFull {
     }
 
     @Override
-    public int read(final String path, final ByteBuffer buffer, final long size, final long offset,
+    public int read(String path, ByteBuffer buffer, long size, long offset,
             final FileInfoWrapper info) {
         // Compute substring that we are being asked to read
         final String fileContents = CONTENTS.substring((int) offset,
@@ -70,8 +70,8 @@ public class App extends FuseFilesystemAdapterFull {
     }
 
     @Override
-    public int readdir(final String path, final DirectoryFiller filler) {
-        filler.add(filename);
+    public int readdir(String path, DirectoryFiller filler) {
+        filler.add(FILENAME);
         filler.add("sridhar.txt");
         return 0;
     }
