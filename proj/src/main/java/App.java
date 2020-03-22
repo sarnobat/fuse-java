@@ -51,90 +51,81 @@ public class App extends FuseFilesystemAdapterFull {
 
                 @Override
                 public void run() {
-                    try {
-                        File myObj = new File("/Users/srsarnob/sarnobat.git/gedcom/rohidekar.ged");
-                        Scanner myReader = new Scanner(myObj);
-                        Individual individual = null;
-                        Family family = null;
-                        while (myReader.hasNextLine()) {
-                            String data = myReader.nextLine();
-                            if (data.startsWith("0") && data.endsWith("INDI")) {
+                    File myObj = new File("/Users/srsarnob/sarnobat.git/gedcom/rohidekar.ged");
+                    Scanner myReader;
 
-                                if (individual != null) {
-                                    System.out.println(individual.toString());
-                                }
-                                String regex = "0..(.*)..INDI";
-                                Pattern p = Pattern.compile(regex);
-                                Matcher matcher = p.matcher(data);
-                                if (matcher.find()) {
-                                    String s = matcher.group(1);
-                                    individual = new Individual(s);
-                                    idToIndividual.put(s, individual);
-                                } else {
-                                    throw new RuntimeException("Developer error");
-                                }
-                                continue;
-                            }
-                            if (individual == null) {
-                                continue;
-                            }
-                            if (data.startsWith("2 GIVN")) {
-                                String replaceAll = data.replaceAll(".*GIVN ", "");
-                                individual.setFirstName(replaceAll);
-                            } else if (data.startsWith("2 SURN")) {
-                                String replaceAll = data.replaceAll(".*SURN ", "");
-                                individual.setLastName(replaceAll);
-                            } else if (data.startsWith("0") && data.endsWith("FAM")) {
-                                String regex = "0..(.*)..FAM";
-                                Pattern p = Pattern.compile(regex);
-                                Matcher matcher = p.matcher(data);
-                                if (matcher.find()) {
-                                    String s = matcher.group(1);
-                                    family = new Family(s);
-                                    idToFamily.put(s, family);
-                                } else {
-                                    throw new RuntimeException("Developer error");
-                                }
-                            } else if (data.startsWith("1 FAMS")) {
-                                String replaceAll = data.replaceAll("1 FAMS .", "").replaceAll(".$", "");
-                                individualToChildFamilyId.put(individual, replaceAll);
-                            } else if (data.startsWith("1 HUSB")) {
-                                String replaceAll = data.replaceAll(".*HUSB .", "").replaceAll(".$", "");
-                                Individual husband = idToIndividual.get(replaceAll);
-                                family.setHusband(husband);
-                            } else if (data.startsWith("1 WIFE")) {
-                                String replaceAll = data.replaceAll(".*WIFE .", "").replaceAll(".$", "");
-                                family.setWife(idToIndividual.get(replaceAll));
-                            } else if (data.startsWith("1 CHIL")) {
-                                String replaceAll = data.replaceAll(".*CHIL .", "").replaceAll(".$", "");
-                                Individual i = idToIndividual.get(replaceAll);
-                                family.addChild(i);
-                                i.setParentFamily(family);
-                            }
-                        }
-                        myReader.close();
+                    try {
+                        myReader = new Scanner(myObj);
                     } catch (FileNotFoundException e) {
-                        System.out.println("An error occurred.");
-                        e.printStackTrace();
+                        throw new RuntimeException(e);
                     }
+                    Individual individual = null;
+                    Family family = null;
+                    while (myReader.hasNextLine()) {
+                        String data = myReader.nextLine();
+                        if (data.startsWith("0") && data.endsWith("INDI")) {
+
+                            if (individual != null) {
+                                System.out.println(individual.toString());
+                            }
+                            String regex = "0..(.*)..INDI";
+                            Pattern p = Pattern.compile(regex);
+                            Matcher matcher = p.matcher(data);
+                            if (matcher.find()) {
+                                String s = matcher.group(1);
+                                individual = new Individual(s);
+                                idToIndividual.put(s, individual);
+                            } else {
+                                throw new RuntimeException("Developer error");
+                            }
+                            continue;
+                        }
+                        if (individual == null) {
+                            continue;
+                        }
+                        if (data.startsWith("2 GIVN")) {
+                            String replaceAll = data.replaceAll(".*GIVN ", "");
+                            individual.setFirstName(replaceAll);
+                        } else if (data.startsWith("2 SURN")) {
+                            String replaceAll = data.replaceAll(".*SURN ", "");
+                            individual.setLastName(replaceAll);
+                        } else if (data.startsWith("0") && data.endsWith("FAM")) {
+                            String regex = "0..(.*)..FAM";
+                            Pattern p = Pattern.compile(regex);
+                            Matcher matcher = p.matcher(data);
+                            if (matcher.find()) {
+                                String s = matcher.group(1);
+                                family = new Family(s);
+                                idToFamily.put(s, family);
+                            } else {
+                                throw new RuntimeException("Developer error");
+                            }
+                        } else if (data.startsWith("1 FAMS")) {
+                            String replaceAll = data.replaceAll("1 FAMS .", "").replaceAll(".$", "");
+                            individualToChildFamilyId.put(individual, replaceAll);
+                        } else if (data.startsWith("1 HUSB")) {
+                            String replaceAll = data.replaceAll(".*HUSB .", "").replaceAll(".$", "");
+                            Individual husband = idToIndividual.get(replaceAll);
+                            family.setHusband(husband);
+                        } else if (data.startsWith("1 WIFE")) {
+                            String replaceAll = data.replaceAll(".*WIFE .", "").replaceAll(".$", "");
+                            family.setWife(idToIndividual.get(replaceAll));
+                        } else if (data.startsWith("1 CHIL")) {
+                            String replaceAll = data.replaceAll(".*CHIL .", "").replaceAll(".$", "");
+                            Individual i = idToIndividual.get(replaceAll);
+                            family.addChild(i);
+                            i.setParentFamily(family);
+                        }
+                    }
+                    myReader.close();
 
                     // attach each individual to its family
                     for (Individual i : individualToChildFamilyId.keySet()) {
                         Family f = idToFamily.get(individualToChildFamilyId.get(i));
-//                        f.addChild(i);
                         i.setChildFamily(f);
                         System.out.println("Has parent: " + i.toString());
                     }
-//                    for (Individual i : idToIndividual.values()) {
-//                        if (i.getFamily() == null) {
-//                            individualsWithNoParent.add(i);
-//                            System.out.println("No parent: " + i.toString());
-//                        }
-//                    }
                     for (Family f : idToFamily.values()) {
-//                        f.getHusband().setFamily(f);
-//                        f.getWife().setFamily(f);
-                        System.out.println(f.toString());
                         for (Individual child : f.getChildren()) {
                             childToFather.put(child, f.getHusband());
                             childToMother.put(child, f.getWife());
