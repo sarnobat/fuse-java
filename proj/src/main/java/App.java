@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
@@ -66,7 +67,7 @@ public class App extends FuseFilesystemAdapterFull {
                         if (data.startsWith("0") && data.endsWith("INDI")) {
 
                             if (individual != null) {
-                                System.out.println(individual.toString());
+//                                System.out.println(individual.toString());
                             }
                             String regex = "0..(.*)..INDI";
                             Pattern p = Pattern.compile(regex);
@@ -123,13 +124,15 @@ public class App extends FuseFilesystemAdapterFull {
                     for (Individual i : individualToChildFamilyId.keySet()) {
                         Family f = idToFamily.get(individualToChildFamilyId.get(i));
                         i.setChildFamily(f);
-                        System.out.println("Has parent: " + i.toString());
+//                        System.out.println("Has parent: " + i.toString());
                     }
                     for (Family f : idToFamily.values()) {
                         for (Individual child : f.getChildren()) {
                             childToFather.put(child, f.getHusband());
                             childToMother.put(child, f.getWife());
                         }
+                        f.getHusband().setSpouse(f.getWife());
+                        f.getWife().setSpouse(f.getHusband());
                     }
 
                     // I24 - root
@@ -146,15 +149,13 @@ public class App extends FuseFilesystemAdapterFull {
         if (f == null) {
             return "";
         }
-//        if (string.length() > 12) {
-//            return "";
-//        }
-        String s = "  " + f.getWife().toString();
+        String s = "";// " " + f.getWife().toString();
         for (Individual c : f.getChildren()) {
             if (c == f.getHusband()) {
                 throw new RuntimeException("infinite loop");
             }
-            s += "\n" + string + c.toString() + printFamily(c.getChildFamily(), string + "  ");
+            s += "\n" + string + c.toString() + (c.getSpouse() == null ? "" : " -- " + c.getSpouse().toString());
+            s += printFamily(c.getChildFamily(), string + "  ");
         }
         return s;
     }
@@ -218,9 +219,18 @@ public class App extends FuseFilesystemAdapterFull {
         String firstName;
         Family childFamily;
         Family parentFamily;
+        Individual spouse;
 
         Family getChildFamily() {
             return childFamily;
+        }
+
+        public void setSpouse(Individual husband) {
+            this.spouse = husband;
+        }
+
+        public Individual getSpouse() {
+            return this.spouse;
         }
 
         void setChildFamily(Family childFamily) {
