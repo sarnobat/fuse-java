@@ -4,18 +4,22 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
+
 import net.fusejna.DirectoryFiller;
+import net.fusejna.ErrorCodes;
 import net.fusejna.FuseException;
 import net.fusejna.StructFuseFileInfo.FileInfoWrapper;
 import net.fusejna.StructStat.StatWrapper;
@@ -24,13 +28,18 @@ import net.fusejna.util.FuseFilesystemAdapterFull;
 
 public class App extends FuseFilesystemAdapterFull {
 
-    private static Map<Individual, Individual> childToMother = new HashMap<>();
-    private static Map<Individual, Individual> childToFather = new HashMap<>();
+    private static Map<String, Individual> childToMother = new HashMap<>();
+    private static Map<String, Individual> childToFather = new HashMap<>();
     private static Map<Individual, String> individualToChildFamilyId = new HashMap<>();
     private static Map<String, String> displayNameOfChildToParent = new HashMap<>();
     private static Map<String, Individual> idToIndividual = new HashMap<>();
+    private static Map<String, Individual> displayNameToIndividual = new HashMap<>();
     private static Map<String, Family> idToFamily = new HashMap<>();
     private static Set<Individual> individualsWithNoParent = new HashSet<>();
+    @Deprecated // we are mixing different marriages
+    private static Multimap<String, Individual> displayNameToChildren = HashMultimap.create();
+
+    private static final String ROOT_ID = "I26";
 
     public static void main(String... args) throws FuseException, IOException {
         // Strange - groovy ignores arg1's hardcoding. Maybe it's not an acceptable
@@ -52,6 +61,7 @@ public class App extends FuseFilesystemAdapterFull {
 
             new Thread() {
 
+                @SuppressWarnings("resource")
                 @Override
                 public void run() {
                     File myObj = new File("/Users/srsarnob/sarnobat.git/gedcom/rohidekar.ged");
@@ -92,6 +102,7 @@ public class App extends FuseFilesystemAdapterFull {
                         } else if (data.startsWith("2 SURN")) {
                             String replaceAll = data.replaceAll(".*SURN ", "");
                             individual.setLastName(replaceAll);
+                            displayNameToIndividual.put(individual.toString(), individual);
                         } else if (data.startsWith("0") && data.endsWith("FAM")) {
                             String regex = "0..(.*)..FAM";
                             Pattern p = Pattern.compile(regex);
@@ -121,28 +132,65 @@ public class App extends FuseFilesystemAdapterFull {
                         }
                     }
                     myReader.close();
-
+                    if (idToFamily.size() != 88) {
+                        throw new RuntimeException("missing families");
+                    }
+                    if (idToIndividual.size() != 256) {
+                        throw new RuntimeException("missing individual");
+                    }
+//                    if (!idToIndividual.keySet().contains("F10")) {
+//                        throw new RuntimeException();
+//                    }
                     // attach each individual to its family
                     for (Individual i : individualToChildFamilyId.keySet()) {
                         Family f = idToFamily.get(individualToChildFamilyId.get(i));
                         i.setChildFamily(f);
+                        i.addChildFamily(f);
 //                        System.out.println("Has parent: " + i.toString());
                     }
                     for (Family f : idToFamily.values()) {
+                        System.out.println("SRIDHAR App.main(...).new Thread() {...}.run() family father = "
+                                + f.getHusband().toString() + "\thas " + f.getChildren().size() + " children: "
+                                + f.getChildren().toString());
                         for (Individual child : f.getChildren()) {
-                            childToFather.put(child, f.getHusband());
-                            childToMother.put(child, f.getWife());
+
+                            if ("I119".equals(child.getId())) {
+
+                            }
+                            childToFather.put(child.getId(), f.getHusband());
+                            childToMother.put(child.getId(), f.getWife());
+
+                            displayNameToChildren.put(f.getHusband().toString(), child);
+                            displayNameToChildren.put(f.getWife().toString(), child);
                         }
                         f.getHusband().setSpouse(f.getWife());
                         f.getWife().setSpouse(f.getHusband());
                     }
+                    for (String id : idToIndividual.keySet()) {
+                        if (!childToFather.containsKey(id) && !childToMother.containsKey(id)) {
+                            System.out.println(id + " has no parents :" + idToIndividual.get(id));
+                        }
+                    }
+                    if (!idToIndividual.keySet().contains(ROOT_ID)) {
+                        throw new RuntimeException();
+                    }
 
+                    if (!displayNameToChildren.keySet().contains("Venkat Rao Rohidekar I26")) {
+                        throw new RuntimeException("developer error");
+                    }
+
+                    Individual child = displayNameToIndividual.get("Venkat Rao Rohidekar I26");
+                    if (!displayNameToChildren.containsKey(child.toString())) {
+                        for (String s : displayNameToIndividual.keySet()) {
+                            System.out.println("SRIDHAR App.main(...).new Thread() {...}.run() " + s);
+                        }
+                        throw new RuntimeException("");
+                    }
                     // I24 - root
-                    System.out.println(printFamily(idToIndividual.get("I24").getChildFamily(), ""));
+                    System.out.println(printFamily(idToIndividual.get(ROOT_ID).getChildFamily(), ""));
                 }
 
             }.run();
-            ;
             new App().log(true).mount(string);
         }
     }
@@ -157,7 +205,11 @@ public class App extends FuseFilesystemAdapterFull {
                 throw new RuntimeException("infinite loop");
             }
             s += "\n" + string + c.toString() + (c.getSpouse() == null ? "" : " -- " + c.getSpouse().toString());
-            s += printFamily(c.getChildFamily(), string + "  ");
+            Family childFamily1 = c.getChildFamily();
+            s += printFamily(childFamily1, string + "  ");
+            for (Family childFamily : c.getChildFamilies()) {
+                s += printFamily(childFamily, string + "  ");
+            }
         }
         return s;
     }
@@ -173,7 +225,7 @@ public class App extends FuseFilesystemAdapterFull {
             return husband;
         }
 
-        public Iterable<Individual> getChildren() {
+        public Collection<Individual> getChildren() {
             return children;
         }
 
@@ -219,12 +271,24 @@ public class App extends FuseFilesystemAdapterFull {
         private final String id;
 
         String firstName;
+        // TODO: this should be a collection of child families
+        @Deprecated
         Family childFamily;
+        Map<String, Family> childFamilies = new HashMap<>();
         Family parentFamily;
         Individual spouse;
 
+        @Deprecated
         Family getChildFamily() {
             return childFamily;
+        }
+
+        public Iterable<Family> getChildFamilies() {
+            return childFamilies.values();
+        }
+
+        public String getId() {
+            return id;
         }
 
         public void setSpouse(Individual husband) {
@@ -235,8 +299,13 @@ public class App extends FuseFilesystemAdapterFull {
             return this.spouse;
         }
 
+        @Deprecated
         void setChildFamily(Family childFamily) {
             this.childFamily = childFamily;
+        }
+
+        void addChildFamily(Family childFamily) {
+            this.childFamilies.put(childFamily.getId(), childFamily);
         }
 
         Family getParentFamily() {
@@ -280,25 +349,41 @@ public class App extends FuseFilesystemAdapterFull {
 
     @Override
     public int getattr(String path, StatWrapper stat) {
-        stat.setAllTimesMillis(System.currentTimeMillis());
+        try {
+            stat.setAllTimesMillis(System.currentTimeMillis());
 //        System.out.println("SRIDHAR App.getattr() " + path);
-        if (path.equals(File.separator)) { // Root directory
-            stat.setMode(NodeType.DIRECTORY);
-            return 0;
+            if (path.equals(File.separator)) { // Root directory
+                stat.setMode(NodeType.DIRECTORY);
+                return 0;
+            }
+            if (path.contains(".txt")) { // hello.txt
+                stat.setMode(NodeType.FILE).size(CONTENTS.length());
+                return 0;
+            } else {
+                String lastPartOf = getLastPartOf(path);
+                if (displayNameToIndividual.keySet().contains(lastPartOf)) {
+                    System.out.println("SRIDHAR App.getattr() DIRECTORY: " + path);
+                    stat.setMode(NodeType.DIRECTORY);
+                    return 0;
+                } else {
+                    System.out.println("SRIDHAR App.getattr() lastPartOf = " + lastPartOf);
+                    System.out.println("SRIDHAR App.getattr() FILE: " + path);
+                    stat.setMode(NodeType.FILE).size(CONTENTS.length());
+                    return 0;
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ErrorCodes.ENOENT();
         }
-        if (path.contains(".txt")) { // hello.txt
-            stat.setMode(NodeType.FILE).size(CONTENTS.length());
-            return 0;
-        } else if (path.contains("ohidekar")) {
-            System.out.println("SRIDHAR App.getattr() DIRECTORY: " + path);
-            stat.setMode(NodeType.DIRECTORY);
-            return 0;
-        } else {
-            System.out.println("SRIDHAR App.getattr() FILE: " + path);
-            stat.setMode(NodeType.FILE).size(CONTENTS.length());
-            return 0;
-        }
-        // return -ErrorCodes.ENOENT();
+    }
+
+    private String getLastPartOf(String path) {
+        Path path2 = Paths.get(path);
+//        String string = path2.getName(path2.getNameCount()).toString();
+        String string = path2.getFileName().toString();
+        System.out.println("SRIDHAR App.getLastPartOf() " + string);
+        return string;
     }
 
     private static boolean isDirectory(String path) {
@@ -320,21 +405,46 @@ public class App extends FuseFilesystemAdapterFull {
 
     @Override
     public int readdir(String path, DirectoryFiller filler) {
-        filler.add(FILENAME);
-        filler.add("sridhar.txt");
+
+//        filler.add(FILENAME);
+//        filler.add("sridhar.txt");
+        try {
 //        System.out.println("SRIDHAR App.readdir() " + path);
-        for (Entry<String, String> childToParent : displayNameOfChildToParent.entrySet()) {
-            String parent = childToParent.getValue();
-            if (parent.equals(path)) {
-                filler.add(childToParent.getKey());
+            if (path.equals("/")) {
+//            String key = "I31";
+                Individual individual = idToIndividual.get(ROOT_ID);
+                String string = individual.toString();
+                filler.add(string);
+                for (Family childFamily : individual.getChildFamilies()) {
+                    for (Individual c : childFamily.getChildren()) {
+                        displayNameOfChildToParent.put(c.toString(), string);
+                    }
+                }
+            } else {
+                String s = Paths.get(path).getFileName().toString();
+                System.out.println("SRIDHAR App.readdir() " + s);
+                Individual child = displayNameToIndividual.get(s);
+                if (!displayNameToIndividual.containsKey(child.toString())) {
+//                    throw new RuntimeException("");
+                    System.out.println("error");
+                    System.exit(-1);
+                    
+                }
+                Collection<Individual> collection = displayNameToChildren.get(child.toString());
+                for (Individual i : collection) {
+                    filler.add(i.toString());
+                }
+//            for (Entry<String, String> childToParent : displayNameOfChildToParent.entrySet()) {
+//                String parent = childToParent.getValue();
+//                if (parent.equals(path)) {
+//                    filler.add(childToParent.getKey());
+//                }
+//            }
             }
-        }
-        String key = "I31";
-        Individual individual = idToIndividual.get(key);
-        String string = individual.toString();
-        filler.add(string);
-        for (Individual c : individual.getChildFamily().getChildren()) {
-            displayNameOfChildToParent.put(c.toString(), string);
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.exit(-1);
+            //return -1;
         }
         return 0;
     }
