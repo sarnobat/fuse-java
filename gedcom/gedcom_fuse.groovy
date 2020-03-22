@@ -28,6 +28,7 @@ public class App extends FuseFilesystemAdapterFull {
 
     @Override
     public int getattr(final String path, final StatWrapper stat) {
+        stat.setAllTimesMillis(System.currentTimeMillis());
         if (path.equals(File.separator)) { // Root directory
             stat.setMode(NodeType.DIRECTORY);
             return 0;
@@ -46,6 +47,7 @@ public class App extends FuseFilesystemAdapterFull {
         final String s = contents.substring((int) offset,
                 (int) Math.max(offset, Math.min(contents.length() - offset, offset + size)));
         buffer.put(s.getBytes());
+        System.out.println("SRIDHAR App.read() " + s);
         return s.getBytes().length;
     }
 
