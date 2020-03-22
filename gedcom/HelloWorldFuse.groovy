@@ -24,7 +24,7 @@ public class FuseJnaExample extends FuseFilesystemAdapterFull
 	}
 
 	final String filename = "/hello1.txt";
-	final String contents = "Hello World!\n";
+	final String contents = "Hello World\n";
 
 	@Override
 	public int getattr(final String path, final StatWrapper stat)
