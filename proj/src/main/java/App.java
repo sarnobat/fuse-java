@@ -5,7 +5,11 @@ import java.nio.ByteBuffer;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Scanner;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -18,6 +22,12 @@ import net.fusejna.types.TypeMode.NodeType;
 import net.fusejna.util.FuseFilesystemAdapterFull;
 
 public class App extends FuseFilesystemAdapterFull {
+
+    private static Map<Individual, Individual> childToParent = new HashMap<>();
+    private static Map<Individual, String> individualToFamilyId = new HashMap<>();
+    private static Map<String, Individual> idToIndividual = new HashMap<>();
+    private static Map<String, Family> idToFamily = new HashMap<>();
+    private static Set<Individual> individualsWithNoParent = new HashSet<>();
 
     public static void main(String... args) throws FuseException, IOException {
         // Strange - groovy ignores arg1's hardcoding. Maybe it's not an acceptable
@@ -45,9 +55,9 @@ public class App extends FuseFilesystemAdapterFull {
                         File myObj = new File("/Users/srsarnob/sarnobat.git/gedcom/rohidekar.ged");
                         Scanner myReader = new Scanner(myObj);
                         Individual individual = null;
+                        Family family = null;
                         while (myReader.hasNextLine()) {
                             String data = myReader.nextLine();
-//                            System.out.println("SRIDHAR App.main(...).new Thread() {...}.run() " + data);
                             if (data.startsWith("0") && data.endsWith("INDI")) {
 
                                 if (individual != null) {
@@ -58,8 +68,8 @@ public class App extends FuseFilesystemAdapterFull {
                                 Matcher matcher = p.matcher(data);
                                 if (matcher.find()) {
                                     String s = matcher.group(1);
-//                                    System.out.println("SRIDHAR App.main(...).new Thread() {...}.run() " + s);
                                     individual = new Individual(s);
+                                    idToIndividual.put(s, individual);
                                 } else {
                                     throw new RuntimeException("Developer error");
                                 }
@@ -74,6 +84,26 @@ public class App extends FuseFilesystemAdapterFull {
                             } else if (data.startsWith("2 SURN")) {
                                 String replaceAll = data.replaceAll(".*SURN ", "");
                                 individual.setLastName(replaceAll);
+                            } else if (data.startsWith("0") && data.endsWith("FAM")) {
+                                String regex = "0..(.*)..FAM";
+                                Pattern p = Pattern.compile(regex);
+                                Matcher matcher = p.matcher(data);
+                                if (matcher.find()) {
+                                    String s = matcher.group(1);
+                                    family = new Family(s);
+                                    idToFamily.put(s, family);
+                                } else {
+                                    throw new RuntimeException("Developer error");
+                                }
+                            } else if (data.startsWith("1 FAMS")) {
+                                String replaceAll = data.replaceAll("1 FAMS .", "").replaceAll(".$", "");
+                                individualToFamilyId.put(individual, replaceAll);
+                            } else if (data.startsWith("1 HUSB")) {
+                                String replaceAll = data.replaceAll(".*HUSB .", "").replaceAll(".$", "");
+                                family.setHusband(idToIndividual.get(replaceAll));
+                            } else if (data.startsWith("1 WIFE")) {
+                                String replaceAll = data.replaceAll(".*WIFE .", "").replaceAll(".$", "");
+                                family.setWife(idToIndividual.get(replaceAll));
                             }
                         }
                         myReader.close();
@@ -82,13 +112,76 @@ public class App extends FuseFilesystemAdapterFull {
                         e.printStackTrace();
                     }
 
+                    // attach each individual to its family
+                    for (Individual i : individualToFamilyId.keySet()) {
+                        Family f = idToFamily.get(individualToFamilyId.get(i));
+//                        f.addChild(i);
+                        i.addFamily(f);
+                        System.out.println("Has parent: " + i.toString());
+                    }
+                    for (Individual i : idToIndividual.values()) {
+                        if (i.getFamily() == null) {
+                            individualsWithNoParent.add(i);
+                            System.out.println("No parent: " + i.toString());
+                        }
+                    }
+                    for (Family f : idToFamily.values()) {
+                        System.out.println(f.toString());
+                    }
                 }
 
             }.run();
             ;
             new App().log(true).mount(string);
-//            System.exit(1);
-//          args = new String[]{ "/sarnobat.garagebandbroken/trash/fuse-jna/mnt" };
+        }
+    }
+
+    // TODO: rename this to Marriage
+    private static class Family {
+        private final String id;
+        private Individual husband;
+        private Individual wife;
+        private final Set<Individual> children = new HashSet<>();
+
+        Individual getHusband() {
+            return husband;
+        }
+
+        public String getId() {
+            return id;
+        }
+
+        public void addChild(Individual i) {
+            children.add(i);
+        }
+
+        void setHusband(Individual husband) {
+            this.husband = husband;
+        }
+
+        Individual getWife() {
+            return wife;
+        }
+
+        void setWife(Individual wife) {
+            this.wife = wife;
+        }
+
+        Family(String id) {
+            this.id = id;
+        }
+
+        @Override
+        public String toString() {
+            String string = id + "  " + husband.toString() + " -- " + wife.toString();
+            if (children.size() > 0) {
+                string += " (";
+                for (Individual i : children) {
+                    string += "," + i.toString();
+                }
+            }
+            string += ")";
+            return string;
         }
     }
 
@@ -96,9 +189,18 @@ public class App extends FuseFilesystemAdapterFull {
         private final String id;
 
         String firstName;
+        Family family;
 
         Individual(String id) {
             this.id = id;
+        }
+
+        public Object getFamily() {
+            return family;
+        }
+
+        public void addFamily(Family f) {
+            this.family = f;
         }
 
         String getFirstName() {
@@ -118,10 +220,10 @@ public class App extends FuseFilesystemAdapterFull {
         }
 
         String lastName;
-        
+
         @Override
         public String toString() {
-            return firstName + " " + lastName;
+            return firstName + " " + lastName + " " + id;
         }
     }
 
