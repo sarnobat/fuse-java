@@ -27,7 +27,7 @@ public class App extends FuseFilesystemAdapterFull {
     private static Map<Individual, Individual> childToMother = new HashMap<>();
     private static Map<Individual, Individual> childToFather = new HashMap<>();
     private static Map<Individual, String> individualToChildFamilyId = new HashMap<>();
-    private static Map<String, String> displayNameOfChildToParent= new HashMap<>();
+    private static Map<String, String> displayNameOfChildToParent = new HashMap<>();
     private static Map<String, Individual> idToIndividual = new HashMap<>();
     private static Map<String, Family> idToFamily = new HashMap<>();
     private static Set<Individual> individualsWithNoParent = new HashSet<>();
@@ -281,18 +281,31 @@ public class App extends FuseFilesystemAdapterFull {
     @Override
     public int getattr(String path, StatWrapper stat) {
         stat.setAllTimesMillis(System.currentTimeMillis());
+//        System.out.println("SRIDHAR App.getattr() " + path);
         if (path.equals(File.separator)) { // Root directory
             stat.setMode(NodeType.DIRECTORY);
             return 0;
         }
-        if (path.equals(FILENAME)) { // hello.txt
+        if (path.contains(".txt")) { // hello.txt
             stat.setMode(NodeType.FILE).size(CONTENTS.length());
             return 0;
+        } else if (path.contains("ohidekar")) {
+            System.out.println("SRIDHAR App.getattr() DIRECTORY: " + path);
+            stat.setMode(NodeType.DIRECTORY);
+            return 0;
         } else {
+            System.out.println("SRIDHAR App.getattr() FILE: " + path);
             stat.setMode(NodeType.FILE).size(CONTENTS.length());
             return 0;
         }
         // return -ErrorCodes.ENOENT();
+    }
+
+    private static boolean isDirectory(String path) {
+        if (displayNameOfChildToParent.values().contains(path.replace("/", ""))) {
+            return true;
+        }
+        return false;
     }
 
     @Override
@@ -309,7 +322,7 @@ public class App extends FuseFilesystemAdapterFull {
     public int readdir(String path, DirectoryFiller filler) {
         filler.add(FILENAME);
         filler.add("sridhar.txt");
-        System.out.println("SRIDHAR App.readdir() " + path);
+//        System.out.println("SRIDHAR App.readdir() " + path);
         for (Entry<String, String> childToParent : displayNameOfChildToParent.entrySet()) {
             String parent = childToParent.getValue();
             if (parent.equals(path)) {
