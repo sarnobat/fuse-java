@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -26,6 +27,7 @@ public class App extends FuseFilesystemAdapterFull {
     private static Map<Individual, Individual> childToMother = new HashMap<>();
     private static Map<Individual, Individual> childToFather = new HashMap<>();
     private static Map<Individual, String> individualToChildFamilyId = new HashMap<>();
+    private static Map<String, String> displayNameOfChildToParent= new HashMap<>();
     private static Map<String, Individual> idToIndividual = new HashMap<>();
     private static Map<String, Family> idToFamily = new HashMap<>();
     private static Set<Individual> individualsWithNoParent = new HashSet<>();
@@ -307,8 +309,20 @@ public class App extends FuseFilesystemAdapterFull {
     public int readdir(String path, DirectoryFiller filler) {
         filler.add(FILENAME);
         filler.add("sridhar.txt");
-        String string = idToIndividual.get("I24").toString();
+        System.out.println("SRIDHAR App.readdir() " + path);
+        for (Entry<String, String> childToParent : displayNameOfChildToParent.entrySet()) {
+            String parent = childToParent.getValue();
+            if (parent.equals(path)) {
+                filler.add(childToParent.getKey());
+            }
+        }
+        String key = "I31";
+        Individual individual = idToIndividual.get(key);
+        String string = individual.toString();
         filler.add(string);
+        for (Individual c : individual.getChildFamily().getChildren()) {
+            displayNameOfChildToParent.put(c.toString(), string);
+        }
         return 0;
     }
 
