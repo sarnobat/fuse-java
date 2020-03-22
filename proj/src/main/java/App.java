@@ -23,7 +23,8 @@ import net.fusejna.util.FuseFilesystemAdapterFull;
 
 public class App extends FuseFilesystemAdapterFull {
 
-    private static Map<Individual, Individual> childToParent = new HashMap<>();
+    private static Map<Individual, Individual> childToMother = new HashMap<>();
+    private static Map<Individual, Individual> childToFather = new HashMap<>();
     private static Map<Individual, String> individualToFamilyId = new HashMap<>();
     private static Map<String, Individual> idToIndividual = new HashMap<>();
     private static Map<String, Family> idToFamily = new HashMap<>();
@@ -100,10 +101,16 @@ public class App extends FuseFilesystemAdapterFull {
                                 individualToFamilyId.put(individual, replaceAll);
                             } else if (data.startsWith("1 HUSB")) {
                                 String replaceAll = data.replaceAll(".*HUSB .", "").replaceAll(".$", "");
-                                family.setHusband(idToIndividual.get(replaceAll));
+                                Individual husband = idToIndividual.get(replaceAll);
+                                family.setHusband(husband);
                             } else if (data.startsWith("1 WIFE")) {
                                 String replaceAll = data.replaceAll(".*WIFE .", "").replaceAll(".$", "");
                                 family.setWife(idToIndividual.get(replaceAll));
+                            }else if (data.startsWith("1 CHIL")) {
+                                String replaceAll = data.replaceAll(".*CHIL .", "").replaceAll(".$", "");
+                                Individual i = idToIndividual.get(replaceAll);
+                                family.addChild(i);
+                                i.addFamily(family);
                             }
                         }
                         myReader.close();
@@ -126,8 +133,16 @@ public class App extends FuseFilesystemAdapterFull {
                         }
                     }
                     for (Family f : idToFamily.values()) {
+//                        f.getHusband().setFamily(f);
+//                        f.getWife().setFamily(f);
                         System.out.println(f.toString());
+                        for (Individual child : f.getChildren()) {
+                            childToFather.put(child, f.getHusband());
+                            childToMother.put(child, f.getWife());
+                        }
                     }
+                    
+                    // I24 - root
                 }
 
             }.run();
@@ -145,6 +160,10 @@ public class App extends FuseFilesystemAdapterFull {
 
         Individual getHusband() {
             return husband;
+        }
+
+        public Iterable<Individual> getChildren() {
+            return children;
         }
 
         public String getId() {
@@ -261,6 +280,8 @@ public class App extends FuseFilesystemAdapterFull {
     public int readdir(String path, DirectoryFiller filler) {
         filler.add(FILENAME);
         filler.add("sridhar.txt");
+        String string = idToIndividual.get("I24").toString();
+        filler.add(string);
         return 0;
     }
 
