@@ -162,7 +162,7 @@ public class App extends FuseFilesystemAdapterFull {
 						// System.out.println("Has parent: " + i.toString());
 					}
 					for (Family f : idToFamily.values()) {
-						System.out .println("SRIDHAR App.main.run() family father = " + f.getHusband().toString() + "\thas " + f.getChildren().size() + " children: " + f.getChildren().toString());
+// 						System.out .println("SRIDHAR App.main.run() family father = " + f.getHusband().toString() + "\thas " + f.getChildren().size() + " children: " + f.getChildren().toString());
 						for (Individual child : f.getChildren()) {
 
 							if ("I119".equals(child.getId())) {
@@ -196,7 +196,7 @@ public class App extends FuseFilesystemAdapterFull {
 					Individual child = displayNameToIndividual.get("Venkat Rao Rohidekar I26");
 					if (!displayNameToChildren.containsKey(child.toString())) {
 						for (String s : displayNameToIndividual.keySet()) {
-							System.out.println("SRIDHAR App.main.run() " + s);
+// 							System.out.println("SRIDHAR App.main.run() " + s);
 						}
 						throw new RuntimeException("");
 					}
