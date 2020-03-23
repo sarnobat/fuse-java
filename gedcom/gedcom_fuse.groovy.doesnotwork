@@ -180,10 +180,8 @@ public class App extends FuseFilesystemAdapterFull {
 						f.getWife().setSpouse(f.getHusband());
 					}
 					for (String id : idToIndividual.keySet()) {
-						if (!childToFather.containsKey(id)
-								&& !childToMother.containsKey(id)) {
-							System.out.println(id + " has no parents :"
-									+ idToIndividual.get(id));
+						if (!childToFather.containsKey(id) && !childToMother.containsKey(id)) {
+							System.out.println(id + " has no parents :" + idToIndividual.get(id));
 						}
 					}
 					if (!idToIndividual.keySet().contains(ROOT_ID)) {
@@ -208,7 +206,7 @@ public class App extends FuseFilesystemAdapterFull {
 
 			}.run();
 			System.out.println("App.main() 5");
-			new App().log(false).mount(string);
+			new App().log(true).mount(string);
 		}
 	}
 
