@@ -443,7 +443,7 @@ public class App extends FuseFilesystemAdapterFull {
 				}
 			} else {
 				String s = Paths.get(path).getFileName().toString();
-				System.out.println("SRIDHAR App.readdir() " + s);
+//				System.out.println("SRIDHAR App.readdir() " + s);
 				Individual child = displayNameToIndividual.get(s);
 				if (!displayNameToIndividual.containsKey(child.toString())) {
 					// throw new RuntimeException("");
