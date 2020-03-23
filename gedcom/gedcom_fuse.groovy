@@ -85,7 +85,7 @@ public class App extends FuseFilesystemAdapterFull {
 					Family family = null;
 					System.out.println("App.main.run() 4");
 					while (myReader.hasNextLine()) {
-						System.out.println("App.main.run() 5");
+//						System.out.println("App.main.run() 5");
 						String data = myReader.nextLine();
 						if (data.startsWith("0") && data.endsWith("INDI")) {
 
