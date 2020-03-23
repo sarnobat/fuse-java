@@ -222,8 +222,8 @@ public class App extends FuseFilesystemAdapterFull {
 				throw new RuntimeException("infinite loop");
 			}
 			s += "\n" + string + c.toString() + (c.getSpouse() == null ? "" : " -- " + c.getSpouse().toString());
-			Family childFamily1 = c.getChildFamily();
-			s += printFamily(childFamily1, string + "  ");
+//			Family childFamily1 = c.getChildFamily();
+//			s += printFamily(childFamily1, string + "  ");
 			for (Family childFamily : c.getChildFamilies()) {
 				s += printFamily(childFamily, string + "  ");
 			}
