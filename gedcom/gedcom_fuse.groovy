@@ -38,8 +38,7 @@ public class App extends FuseFilesystemAdapterFull {
 	private static Set<Individual> individualsWithNoParent = new HashSet<>();
 	@Deprecated
 	// we are mixing different marriages
-	private static Multimap<String, Individual> displayNameToChildren = HashMultimap
-			.create();
+	private static Multimap<String, Individual> displayNameToChildren = HashMultimap.create();
 
 	private static final String ROOT_ID = "I26";
 
@@ -56,8 +55,7 @@ public class App extends FuseFilesystemAdapterFull {
 			System.err.println("Usage: HelloFS <mountpoint>");
 			String string = "family_tree";
 			String string2 = System.getProperty("user.home") + "/github/fuse-java/proj/" + string;
-			new ProcessBuilder().command("diskutil", "unmount", string2)
-					.inheritIO().start();
+			new ProcessBuilder().command("diskutil", "unmount", string2).inheritIO().start();
 			try {
 				Files.createDirectory(Paths.get(string2));
 			} catch (FileAlreadyExistsException e) {
@@ -129,22 +127,18 @@ public class App extends FuseFilesystemAdapterFull {
 								throw new RuntimeException("Developer error");
 							}
 						} else if (data.startsWith("1 FAMS")) {
-							String replaceAll = data.replaceAll("1 FAMS .", "")
-									.replaceAll(".\044", "");
+							String replaceAll = data.replaceAll("1 FAMS .", "").replaceAll(".\044", "");
 							individualToChildFamilyId.put(individual,
 									replaceAll);
 						} else if (data.startsWith("1 HUSB")) {
-							String replaceAll = data.replaceAll(".*HUSB .", "")
-									.replaceAll(".\044", "");
+							String replaceAll = data.replaceAll(".*HUSB .", "").replaceAll(".\044", "");
 							Individual husband = idToIndividual.get(replaceAll);
 							family.setHusband(husband);
 						} else if (data.startsWith("1 WIFE")) {
-							String replaceAll = data.replaceAll(".*WIFE .", "")
-									.replaceAll(".\044", "");
+							String replaceAll = data.replaceAll(".*WIFE .", "") .replaceAll(".\044", "");
 							family.setWife(idToIndividual.get(replaceAll));
 						} else if (data.startsWith("1 CHIL")) {
-							String replaceAll = data.replaceAll(".*CHIL .", "")
-									.replaceAll(".\044", "");
+							String replaceAll = data.replaceAll(".*CHIL .", "").replaceAll(".\044", "");
 							Individual i = idToIndividual.get(replaceAll);
 							family.addChild(i);
 							i.setParentFamily(family);
@@ -162,20 +156,13 @@ public class App extends FuseFilesystemAdapterFull {
 					// }
 					// attach each individual to its family
 					for (Individual i : individualToChildFamilyId.keySet()) {
-						Family f = idToFamily.get(individualToChildFamilyId
-								.get(i));
+						Family f = idToFamily.get(individualToChildFamilyId.get(i));
 						i.setChildFamily(f);
 						i.addChildFamily(f);
 						// System.out.println("Has parent: " + i.toString());
 					}
 					for (Family f : idToFamily.values()) {
-						System.out
-								.println("SRIDHAR App.main.run() family father = "
-										+ f.getHusband().toString()
-										+ "\thas "
-										+ f.getChildren().size()
-										+ " children: "
-										+ f.getChildren().toString());
+						System.out .println("SRIDHAR App.main.run() family father = " + f.getHusband().toString() + "\thas " + f.getChildren().size() + " children: " + f.getChildren().toString());
 						for (Individual child : f.getChildren()) {
 
 							if ("I119".equals(child.getId())) {
@@ -208,8 +195,7 @@ public class App extends FuseFilesystemAdapterFull {
 						throw new RuntimeException("developer error");
 					}
 
-					Individual child = displayNameToIndividual
-							.get("Venkat Rao Rohidekar I26");
+					Individual child = displayNameToIndividual.get("Venkat Rao Rohidekar I26");
 					if (!displayNameToChildren.containsKey(child.toString())) {
 						for (String s : displayNameToIndividual.keySet()) {
 							System.out.println("SRIDHAR App.main.run() " + s);
@@ -217,8 +203,7 @@ public class App extends FuseFilesystemAdapterFull {
 						throw new RuntimeException("");
 					}
 					// I24 - root
-					System.out.println(printFamily(idToIndividual.get(ROOT_ID)
-							.getChildFamily(), ""));
+					System.out.println(printFamily(idToIndividual.get(ROOT_ID).getChildFamily(), ""));
 				}
 
 			}.run();
@@ -287,8 +272,7 @@ public class App extends FuseFilesystemAdapterFull {
 
 		@Override
 		public String toString() {
-			String string = id + "  " + husband.toString() + " -- "
-					+ wife.toString();
+			String string = id + "  " + husband.toString() + " -- " 	+ wife.toString();
 			if (children.size() > 0) {
 				string += " (";
 				for (Individual i : children) {
@@ -469,8 +453,7 @@ public class App extends FuseFilesystemAdapterFull {
 					System.exit(-1);
 
 				}
-				Collection<Individual> collection = displayNameToChildren
-						.get(child.toString());
+				Collection<Individual> collection = displayNameToChildren.get(child.toString());
 				for (Individual i : collection) {
 					filler.add(i.toString());
 				}
@@ -492,8 +475,7 @@ public class App extends FuseFilesystemAdapterFull {
 
 	@Override
 	public int rename(String oldName, String newName) {
-		System.out
-				.println("SRIDHAR App.rename() mv " + oldName + " " + newName);
+		System.out.println("SRIDHAR App.rename() mv " + oldName + " " + newName);
 		return 0;
 
 	}
