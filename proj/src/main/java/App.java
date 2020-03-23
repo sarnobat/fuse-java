@@ -206,7 +206,7 @@ public class App extends FuseFilesystemAdapterFull {
 
 			}.run();
 			System.out.println("App.main() 5");
-			new App().log(true).mount(string);
+			new App().log(false).mount(string);
 		}
 	}
 
