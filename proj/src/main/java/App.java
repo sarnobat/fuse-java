@@ -50,7 +50,7 @@ public class App extends FuseFilesystemAdapterFull {
         } else {
             System.err.println("Usage: HelloFS <mountpoint>");
             String string = "family_tree";
-            String string2 = "/Users/srsarnob/github/fuse-java/proj/" + string;
+            String string2 = System.getProperty("user.home") + "/github/fuse-java/proj/" + string;
             new ProcessBuilder().command("diskutil", "unmount", string2).inheritIO().start();
 
             try {
@@ -64,17 +64,28 @@ public class App extends FuseFilesystemAdapterFull {
                 @SuppressWarnings("resource")
                 @Override
                 public void run() {
-                    File myObj = new File("/Users/srsarnob/sarnobat.git/gedcom/rohidekar.ged");
+                	System.out
+							.println("App.main(...).new Thread() {...}.run() 1");
+                    File myObj = new File(System.getProperty("user.home") + "/sarnobat.git/gedcom/rohidekar.ged");
                     Scanner myReader;
 
                     try {
+                    	System.out
+    							.println("App.main(...).new Thread() {...}.run() 2");
                         myReader = new Scanner(myObj);
+
+                    	System.out
+    							.println("App.main(...).new Thread() {...}.run() 3");
                     } catch (FileNotFoundException e) {
                         throw new RuntimeException(e);
                     }
                     Individual individual = null;
                     Family family = null;
+                	System.out
+							.println("App.main(...).new Thread() {...}.run() 4");
                     while (myReader.hasNextLine()) {
+                    	System.out
+    							.println("App.main(...).new Thread() {...}.run() 5");
                         String data = myReader.nextLine();
                         if (data.startsWith("0") && data.endsWith("INDI")) {
 
@@ -115,17 +126,17 @@ public class App extends FuseFilesystemAdapterFull {
                                 throw new RuntimeException("Developer error");
                             }
                         } else if (data.startsWith("1 FAMS")) {
-                            String replaceAll = data.replaceAll("1 FAMS .", "").replaceAll(".$", "");
+                            String replaceAll = data.replaceAll("1 FAMS .", "").replaceAll(".\044", "");
                             individualToChildFamilyId.put(individual, replaceAll);
                         } else if (data.startsWith("1 HUSB")) {
-                            String replaceAll = data.replaceAll(".*HUSB .", "").replaceAll(".$", "");
+                            String replaceAll = data.replaceAll(".*HUSB .", "").replaceAll(".\044", "");
                             Individual husband = idToIndividual.get(replaceAll);
                             family.setHusband(husband);
                         } else if (data.startsWith("1 WIFE")) {
-                            String replaceAll = data.replaceAll(".*WIFE .", "").replaceAll(".$", "");
+                            String replaceAll = data.replaceAll(".*WIFE .", "").replaceAll(".\044", "");
                             family.setWife(idToIndividual.get(replaceAll));
                         } else if (data.startsWith("1 CHIL")) {
-                            String replaceAll = data.replaceAll(".*CHIL .", "").replaceAll(".$", "");
+                            String replaceAll = data.replaceAll(".*CHIL .", "").replaceAll(".\044", "");
                             Individual i = idToIndividual.get(replaceAll);
                             family.addChild(i);
                             i.setParentFamily(family);
