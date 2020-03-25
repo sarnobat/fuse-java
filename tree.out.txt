@@ -1,0 +1,108 @@
+family_tree
+└── Venkat Rao Rohidekar I26 -- Tarabai  I27
+    ├── Anand Rao Rohidekar I28
+    ├── Bhimka Rao Rohidekar I29 -- Radhabai  I82
+    ├── Laxman Rao Rohidekar I24 -- Sitabai  I25
+    │   ├── Krishnaji Laxman Rohidekar I36 -- Venkubai  I37
+    │   │   ├── Champakkabai Rohidekar I71 -- Narayana Rao Raghavendra Habbu I77
+    │   │   │   ├──  I119 -- Pralad Rao Wai I210
+    │   │   │   ├── 'Baby' 'Baby' I118 -- Gururajachav  I205
+    │   │   │   ├── Jinki Prema I115 -- Dr M V Mahishi I198
+    │   │   │   │   ├──  I199 -- Dr Rajini  I232
+    │   │   │   │   └──  I202 -- Vinayak Desai I204
+    │   │   │   ├── Ramesh  I117 -- Leela  I236
+    │   │   │   │   ├── Koushik  I239
+    │   │   │   │   ├── Rashmi  I237
+    │   │   │   │   └── Vani  I238
+    │   │   │   ├── Ramesh R Habbu I116 --   I230
+    │   │   │   │   ├──  Habbu I229
+    │   │   │   │   └──  Habbu I231
+    │   │   │   └── Usha  I114 -- Vaman Rao  I175
+    │   │   │       ├── Sudharshan Harihar I174 -- Suma Sudharshan I176
+    │   │   │       │   └── Suhas Harihar I254 -- Ritinder  I255
+    │   │   │       │       └──  Harihar I256
+    │   │   │       └── Vasanthi ‘Bhagi’ Harish I192 -- K Harish  I193
+    │   │   │           └── K H Anirudh  I194
+    │   │   ├── Raghavendra (Raghu) Rohidekar I75 -- Malati Kakmari I81
+    │   │   │   ├── Indumati Rohidekar I131 -- Krishnamurthy  I135
+    │   │   │   │   └── Dhilip Krishnamurthy I166
+    │   │   │   ├── Krishnamurthy Rohidekar I132 -- Lakshmi  I136
+    │   │   │   │   └── Nikhil Rohidekar I168
+    │   │   │   ├── Rupa Rohidekar I129 -- Govindaswamy  I133
+    │   │   │   │   ├── Ramya Govind I165 -- Srinivas?  I225
+    │   │   │   │   └── Rashmi Govind I164 -- Raghavendra  I223
+    │   │   │   │       └── Vishnu  I224
+    │   │   │   └── Satish Rohidekar I130 -- Chitra Srinivasan I134
+    │   │   │       └── Akhil Rohidekar I167
+    │   │   ├── Ranga Rao Rohidekar I72 -- Shankuntala Potdar I78
+    │   │   │   ├── Gururaj Rohidekar I121 -- Manjula Benkai I124
+    │   │   │   │   ├── Gauri Rohidekar I163
+    │   │   │   │   └── Kiran Rohidekar I162
+    │   │   │   ├── Sridhar Rohidekar I120 --   I123
+    │   │   │   │   └── Sameer Rohidekar I161
+    │   │   │   └── Veena Rohidekar I122 -- Vasant Nagsampige I125
+    │   │   │       ├── Pavan Nagsampige I216
+    │   │   │       └── Pramod Nagsampige I215
+    │   │   ├── Shantabai I80
+    │   │   ├── Susheela Rohidekar I70
+    │   │   ├── Tulsakka Rohidekar I69 -- Vaman Rao Mirji I76
+    │   │   │   ├──   I109
+    │   │   │   ├──   I110
+    │   │   │   ├──   I111
+    │   │   │   ├──   I112
+    │   │   │   └──   I113
+    │   │   └── Vasant Rao Rohidekar I73 -- Kaveri Parvatikar I79
+    │   │       ├── Sreenivas Rohidekar I126
+    │   │       └── Venkatesh Rohidekar I127 -- Venkana  I128
+    │   │           ├── Ashwini Rohidekar I214 -- Madan  I250
+    │   │           └── Sharad Rohidekar I213
+    │   ├── Raghunath Rao Rohidekar I34 -- Janaki Kodagli I35
+    │   │   ├── Geetabai Dani I2
+    │   │   ├── Godavari Rohidekar I42 -- Muralidhar Addabaddi I64
+    │   │   │   ├── Jyothi Addabaddi I91 -- Dattatreya Pujar I92
+    │   │   │   │   ├── Anagha Pujar I158 --   I190
+    │   │   │   │   └── Vishal Pujar I157 --   I191
+    │   │   │   ├── Sarala Addabaddi I67 -- Surendra Muthalik I90
+    │   │   │   │   ├── Archana Muthalik I154 -- Gururaj Beloli I169
+    │   │   │   │   │   ├──  Beloli I188
+    │   │   │   │   │   └──  Beloli I189
+    │   │   │   │   ├── Meghana Muthalik I156
+    │   │   │   │   └── Vandana Muthalik I155 -- Amit Umrani I170
+    │   │   │   ├── Shuba Rao Addabaddi I66 -- Raghavendra Rao S I187
+    │   │   │   └── Vijaya Kshirsagar I89
+    │   │   ├── Ramachandra Rao Rohidekar I38 -- Sitabai Anikhindi I44
+    │   │   │   ├── Asha Rohidekar I102 -- Ashok Sadarjoshi I105
+    │   │   │   ├── Gopal Rohidekar I100 -- Radha  I101
+    │   │   │   ├── Jayaraj Rohidekar I103 -- Vijaya Sadarjoshi I180
+    │   │   │   │   └── Ajay Rohidekar I181
+    │   │   │   ├── Lallakka Rohidekar I97 -- Narsimhamurthy DP I98
+    │   │   │   │   ├── Jeevan Bharadhwaj DN I138 -- Tejasvi N Rao I142
+    │   │   │   │   ├── Pujitha Nagarajan I139
+    │   │   │   │   └── Shreeneedhi DN I140 -- Rashmi  I177
+    │   │   │   │       └── Sanvi  I178
+    │   │   │   ├── Prema Rohidekar I104 -- Prakash Kulkarni I106
+    │   │   │   │   ├── Poornima Kulkarni I146
+    │   │   │   │   └── Prasanna Kulkarni I145
+    │   │   │   └── Puttaka Rohidekar I96 -- Chakarapani Bangalore Krishnaswamny I99
+    │   │   │       └── Madhavi  I137 -- Narayan K I141
+    │   │   ├── Shamaji Rao Rohidekar I39 -- Laxmibai Rama I45
+    │   │   │   ├── (stillborn) Rohidekar I86
+    │   │   │   ├── Deepak Rohidekar I48 -- Anupama  I49
+    │   │   │   │   └── Gaurav Rohidekar I53
+    │   │   │   ├── Meenakshi Rohidekar I47 -- Sudhir Sarnobat I84
+    │   │   │   │   ├── Prakash Sarnobat I93
+    │   │   │   │   ├── Priya Sarnobat I95 -- Joshua Vallis I246
+    │   │   │   │   │   └── Jaguar Vallis I247
+    │   │   │   │   └── Sridhar Sarnobat I94
+    │   │   │   ├── Ravindra Rohidekar I46 -- Snehalata Rao I50
+    │   │   │   │   ├── Gautham Rohidekar I51
+    │   │   │   │   └── Puneet Rohidekar I52
+    │   │   │   └── Srinivas Rohidekar I85
+    │   │   ├── Shantabai Talikoti I55
+    │   │   ├── Srinivas Rohidekar I41
+    │   │   └── Vatsala Rohidekar I43 -- Raghavendra Jagirdar I83
+    │   │       └── Pushpa  I107 --   I108
+    │   │           ├──   I159
+    │   │           └──   I160
+    │   └── Venkatesh Rohidekar I31 -- Rangubai Padki I33
+    └── Venkawwa Rohidekar I30
