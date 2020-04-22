@@ -58,7 +58,7 @@ public class App extends FuseFilesystemAdapterFull {
 		} else {
 			System.err.println("Usage: HelloFS <mountpoint>");
 			String string = "family_tree";
-			String string2 = System.getProperty("user.home") + "/github/fuse-java/proj/" + string;
+			String string2 = System.getProperty("user.home") + "/github/fuse-java/graphml/" + string;
 			new ProcessBuilder().command("diskutil", "unmount", string2).inheritIO().start();
 			try {
 				Files.createDirectory(Paths.get(string2));
