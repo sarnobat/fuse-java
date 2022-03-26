@@ -1,0 +1,1 @@
+../fuse-gedcom/fuse_gedcom.groovy
