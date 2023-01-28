@@ -43,7 +43,8 @@ public class App extends FuseFilesystemAdapterFull {
 	private static Multimap<String, Individual> displayNameToChildren = HashMultimap.create();
 	private static Multimap<String, Individual> displayNameToChildrenWithSpouse = HashMultimap.create();
 
-	private static final String ROOT_ID = "I26";
+// 	private static final String ROOT_ID = "I26";
+	private static final String ROOT_ID = "I44";
 
 	public static void main(String[] args) throws FuseException, IOException {
 	    boolean showSpouses = Boolean.parseBoolean(System.getProperty("spouses", "true"));
@@ -103,6 +104,7 @@ public class App extends FuseFilesystemAdapterFull {
 							String regex = "0..(.*)..INDI";
 							Pattern p = Pattern.compile(regex);
 							Matcher matcher = p.matcher(data);
+							System.err.println("[debug] data = " + data);
 							if (matcher.find()) {
 								String s = matcher.group(1);
 								individual = new Individual(s);
