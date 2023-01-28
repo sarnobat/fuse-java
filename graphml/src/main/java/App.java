@@ -26,6 +26,7 @@ import net.fusejna.StructStat.StatWrapper;
 import net.fusejna.types.TypeMode.NodeType;
 import net.fusejna.util.FuseFilesystemAdapterFull;
 
+// TODO: rename to GedcomFuse
 public class App extends FuseFilesystemAdapterFull {
 
 	private static Map<String, Individual> childToMother = new HashMap<>();
@@ -43,8 +44,8 @@ public class App extends FuseFilesystemAdapterFull {
 	private static Multimap<String, Individual> displayNameToChildren = HashMultimap.create();
 	private static Multimap<String, Individual> displayNameToChildrenWithSpouse = HashMultimap.create();
 
-// 	private static final String ROOT_ID = "I26";
-	private static final String ROOT_ID = "I44";
+ 	private static final String ROOT_ID = "I25";
+//	private static final String ROOT_ID = "I44";
 
 	public static void main(String[] args) throws FuseException, IOException {
 	    boolean showSpouses = Boolean.parseBoolean(System.getProperty("spouses", "true"));
@@ -110,7 +111,7 @@ public class App extends FuseFilesystemAdapterFull {
 								individual = new Individual(s);
 								idToIndividual.put(s, individual);
 							} else {
-								throw new RuntimeException("Developer error");
+								throw new RuntimeException("Developer error for line: " + data);
 							}
 							continue;
 						}
@@ -215,9 +216,9 @@ public class App extends FuseFilesystemAdapterFull {
 						throw new RuntimeException("Couldn't find root " + ROOT_ID);
 					}
 
-					String o = "Venkat Rao Rohidekar I26 -- Tarabai  I27";
+					String o = "Tarabai  I30 -- Venkat Rao Rohidekar I29";
                     if (!displayNameToIndividualWithSpouse.keySet().contains(o)) {
-						throw new RuntimeException("developer error");
+						throw new RuntimeException("developer error: could not find entry for " + o);
 					}
 
 					Individual child = displayNameToIndividualWithSpouse.get(o);
