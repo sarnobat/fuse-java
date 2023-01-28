@@ -56,10 +56,14 @@ public class App extends FuseFilesystemAdapterFull {
 		if (args.length == 1) {
 			new App().log(true).mount(args[0]);
 		} else {
-			System.err.println("Usage: HelloFS <mountpoint>");
 			String string = "family_tree";
+			System.err.println("[warn] no mountpoint specified, using " + System.getProperty("user.dir") + "/" + string);
 			String string2 = System.getProperty("user.home") + "/github/fuse-java/graphml/" + string;
-			new ProcessBuilder().command("diskutil", "unmount", string2).inheritIO().start();
+			if (false) {
+				new ProcessBuilder().command("diskutil", "unmount", string2).inheritIO().start();
+			} else {
+				new ProcessBuilder().command("sudo", "umount", string2).inheritIO().start();
+			}
 			try {
 				Files.createDirectory(Paths.get(string2));
 			} catch (FileAlreadyExistsException e) {
@@ -74,7 +78,7 @@ public class App extends FuseFilesystemAdapterFull {
 				@Override
 				public void run() {
 					System.out.println("App.main.run() 1");
-					File myObj = new File(System.getProperty("user.home") + "/sarnobat.git/gedcom/rohidekar.ged");
+					File myObj = new File(System.getProperty("user.home") + "/sarnobat.git/2021/gedcom/rohidekar.ged");
 					Scanner myReader;
 
 					try {
@@ -149,10 +153,10 @@ public class App extends FuseFilesystemAdapterFull {
 						}
 					}
 					myReader.close();
-					if (idToFamily.size() != 88) {
+					if (idToFamily.size() < 88) {
 						throw new RuntimeException("missing families");
 					}
-					if (idToIndividual.size() != 256) {
+					if (idToIndividual.size() < 256) {
 						throw new RuntimeException("missing individual");
 					}
 					// if (!idToIndividual.keySet().contains("F10")) {
@@ -206,7 +210,7 @@ public class App extends FuseFilesystemAdapterFull {
 					    throw new RuntimeException();
 					}
 					if (!idToIndividual.keySet().contains(ROOT_ID)) {
-						throw new RuntimeException();
+						throw new RuntimeException("Couldn't find root " + ROOT_ID);
 					}
 
 					String o = "Venkat Rao Rohidekar I26 -- Tarabai  I27";
@@ -226,7 +230,7 @@ public class App extends FuseFilesystemAdapterFull {
 				}
 
 			}.run();
-			System.out.println("App.main() 5");
+			System.out.println("App.main() 5 string = " + string);
 			new App().log(false).mount(string);
 		}
 	}
