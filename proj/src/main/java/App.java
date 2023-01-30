@@ -59,8 +59,8 @@ public class App extends FuseFilesystemAdapterFull {
 			new App().log(true).mount(args[0]);
 		} else {
 			System.err.println("Usage: HelloFS <mountpoint>");
-			String string = "family_tree";
-			System.err.println("[warn] no mountpoint specified, using " + System.getProperty("user.dir") + "/" + string);
+	//		String string = "family_tree";
+//			System.err.println("[warn] no mountpoint specified, using " + System.getProperty("user.dir") + "/" + string);
 			//String string2 = System.getProperty("user.home") + "/github/fuse-java/graphml/" + string;
 			String string2 = "/tmp/family_tree";
 			if (false) {
@@ -229,8 +229,8 @@ public class App extends FuseFilesystemAdapterFull {
 				}
 
 			}.run();
-			System.out.println("App.main() 5 string = " + string);
-			new App().log(false).mount(string);
+			System.out.println("App.main() 5 string = " + string2);
+			new App().log(false).mount(string2);
 		}
 	}
 
@@ -377,7 +377,14 @@ public class App extends FuseFilesystemAdapterFull {
 
 		String lastName;
 
+
 		@Override
+		public String toString() {
+            String string = spouse == null ? "" : " -- " + spouse.getFirstName() + " " + spouse.getLastName() + " " + spouse.id;
+            return getFirstName() + " " + getLastName() + " " + id + string; 
+		}
+
+/*		@Override
 		public String toString() {
 			String string = spouse == null ? ""
 					: " -- " + spouse.getFirstName() + " " + spouse.getLastName() + " " + spouse.id;
@@ -391,7 +398,7 @@ public class App extends FuseFilesystemAdapterFull {
 // 				}
 // 			}
 			return string2;
-		}
+		}*/
 	}
 
 	private static final String FILENAME = "/hello1.txt";
