@@ -373,14 +373,14 @@ public class App extends FuseFilesystemAdapterFull {
 			String string = spouse == null ? ""
 					: " -- " + spouse.getFirstName() + " " + spouse.getLastName() + " " + spouse.id;
 			String string2 = getFirstName() + " " + getLastName() + " ";
-			Boolean showId = Boolean.valueOf(System.getProperty("showid", "false"));
-			if (showId) {
-				string2 += id + string;
-			} else {
-				if (getFirstName().isBlank() && getLastName().isBlank()) {
-					string2 += id + string;
-				}
-			}
+// 			Boolean showId = Boolean.valueOf(System.getProperty("showid", "false"));
+// 			if (showId) {
+// 				string2 += id + string;
+// 			} else {
+// 				if (getFirstName().isBlank() && getLastName().isBlank()) {
+// 					string2 += id + string;
+// 				}
+// 			}
 			return string2;
 		}
 	}
