@@ -61,7 +61,8 @@ public class App extends FuseFilesystemAdapterFull {
 			System.err.println("Usage: HelloFS <mountpoint>");
 			String string = "family_tree";
 			System.err.println("[warn] no mountpoint specified, using " + System.getProperty("user.dir") + "/" + string);
-			String string2 = System.getProperty("user.home") + "/github/fuse-java/graphml/" + string;
+			//String string2 = System.getProperty("user.home") + "/github/fuse-java/graphml/" + string;
+			String string2 = "/tmp/family_tree";
 			if (false) {
 			new ProcessBuilder().command("diskutil", "unmount", string2).inheritIO().start();
 			} else {
