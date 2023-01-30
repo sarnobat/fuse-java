@@ -190,11 +190,12 @@ public class App extends FuseFilesystemAdapterFull {
 
 						}
 						if (!f.getHusband().toString().contains("--")) {
-							System.err.println("SRIDHAR App.run() missing " + f.getHusband().toString() + " . See if showid=true fixes it.");
-							System.exit(-1);
+							System.err.println("[warn] SRIDHAR App.run() missing " + f.getHusband().toString() + " . See if showid=true fixes it.");
+// 							System.exit(-1);
 						}
 					}
 					for (Family f : idToFamily.values()) {
+						System.err.println("[debug] f.getHusband().toString() = " + f.getHusband().toString());
 						displayNameToIndividualWithSpouse.put(f.getHusband().toString(), f.getHusband());
 						displayNameToIndividualWithSpouse.put(f.getWife().toString(), f.getWife());
 					}
