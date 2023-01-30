@@ -26,6 +26,7 @@ import net.fusejna.StructStat.StatWrapper;
 import net.fusejna.types.TypeMode.NodeType;
 import net.fusejna.util.FuseFilesystemAdapterFull;
 
+// TODO: rename to GedcomFuse
 public class App extends FuseFilesystemAdapterFull {
 
 	private static Map<String, Individual> childToMother = new HashMap<>();
@@ -43,7 +44,8 @@ public class App extends FuseFilesystemAdapterFull {
 	private static Multimap<String, Individual> displayNameToChildren = HashMultimap.create();
 	private static Multimap<String, Individual> displayNameToChildrenWithSpouse = HashMultimap.create();
 
-	private static final String ROOT_ID = "I29";
+ 	private static final String ROOT_ID = "I25";
+//	private static final String ROOT_ID = "I44";
 
 	public static void main(String[] args) throws FuseException, IOException {
 		boolean showSpouses = Boolean.parseBoolean(System.getProperty("spouses", "true"));
@@ -58,7 +60,8 @@ public class App extends FuseFilesystemAdapterFull {
 		} else {
 			System.err.println("Usage: HelloFS <mountpoint>");
 			String string = "family_tree";
-			String string2 = System.getProperty("user.home") + "/github/fuse-java/proj/" + string;
+			System.err.println("[warn] no mountpoint specified, using " + System.getProperty("user.dir") + "/" + string);
+			String string2 = System.getProperty("user.home") + "/github/fuse-java/graphml/" + string;
 			if (false) {
 			new ProcessBuilder().command("diskutil", "unmount", string2).inheritIO().start();
 			} else {
@@ -108,7 +111,7 @@ public class App extends FuseFilesystemAdapterFull {
 								individual = new Individual(s);
 								idToIndividual.put(s, individual);
 							} else {
-								throw new RuntimeException("Developer error");
+								throw new RuntimeException("Developer error for line: " + data);
 							}
 							continue;
 						}
@@ -209,7 +212,7 @@ public class App extends FuseFilesystemAdapterFull {
 
 					String o = "Venkat Rao Rohidekar I29 -- Tarabai  I30";
 					if (!displayNameToIndividualWithSpouse.keySet().contains(o)) {
-						throw new RuntimeException("developer error");
+						throw new RuntimeException("developer error: could not find entry for " + o);
 					}
 
 					Individual child = displayNameToIndividualWithSpouse.get(o);
@@ -224,7 +227,7 @@ public class App extends FuseFilesystemAdapterFull {
 				}
 
 			}.run();
-			System.out.println("App.main() 5");
+			System.out.println("App.main() 5 string = " + string);
 			new App().log(false).mount(string);
 		}
 	}
