@@ -1,10 +1,5 @@
 import java.io.File;
-import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.file.FileAlreadyExistsException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 import net.fusejna.DirectoryFiller;
 import net.fusejna.ErrorCodes;
@@ -14,6 +9,7 @@ import net.fusejna.StructStat.StatWrapper;
 import net.fusejna.types.TypeMode.NodeType;
 import net.fusejna.util.FuseFilesystemAdapterFull;
 
+// https://github.com/EtiennePerot/fuse-jna/blob/master/src/main/java/net/fusejna/examples/HelloFS.java
 public class HelloFS extends FuseFilesystemAdapterFull {
 
 	public static void main(final String... args) throws FuseException

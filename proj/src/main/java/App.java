@@ -26,6 +26,7 @@ import net.fusejna.StructStat.StatWrapper;
 import net.fusejna.types.TypeMode.NodeType;
 import net.fusejna.util.FuseFilesystemAdapterFull;
 
+// TODO: rename to GedcomFuse
 public class App extends FuseFilesystemAdapterFull {
 
 	private static Map<String, Individual> childToMother = new HashMap<>();
@@ -43,7 +44,8 @@ public class App extends FuseFilesystemAdapterFull {
 	private static Multimap<String, Individual> displayNameToChildren = HashMultimap.create();
 	private static Multimap<String, Individual> displayNameToChildrenWithSpouse = HashMultimap.create();
 
-	private static final String ROOT_ID = "I29";
+ 	private static final String ROOT_ID = "I25";
+//	private static final String ROOT_ID = "I44";
 
 	public static void main(String[] args) throws FuseException, IOException {
 		boolean showSpouses = Boolean.parseBoolean(System.getProperty("spouses", "true"));
@@ -57,9 +59,15 @@ public class App extends FuseFilesystemAdapterFull {
 			new App().log(true).mount(args[0]);
 		} else {
 			System.err.println("Usage: HelloFS <mountpoint>");
-			String string = "family_tree";
-			String string2 = System.getProperty("user.home") + "/github/fuse-java/proj/" + string;
+	//		String string = "family_tree";
+//			System.err.println("[warn] no mountpoint specified, using " + System.getProperty("user.dir") + "/" + string);
+			//String string2 = System.getProperty("user.home") + "/github/fuse-java/graphml/" + string;
+			String string2 = "/tmp/family_tree";
+			if (false) {
 			new ProcessBuilder().command("diskutil", "unmount", string2).inheritIO().start();
+			} else {
+				new ProcessBuilder().command("sudo", "umount", string2).inheritIO().start();
+			}
 			try {
 				Files.createDirectory(Paths.get(string2));
 			} catch (FileAlreadyExistsException e) {
@@ -74,7 +82,7 @@ public class App extends FuseFilesystemAdapterFull {
 				@Override
 				public void run() {
 					System.out.println("App.main.run() 1");
-					File myObj = new File(System.getProperty("user.home") + "/sarnobat.git/gedcom/rohidekar.ged");
+					File myObj = new File(System.getProperty("user.home") + "/sarnobat.git/2021/gedcom/rohidekar.ged");
 					Scanner myReader;
 
 					try {
@@ -104,7 +112,7 @@ public class App extends FuseFilesystemAdapterFull {
 								individual = new Individual(s);
 								idToIndividual.put(s, individual);
 							} else {
-								throw new RuntimeException("Developer error");
+								throw new RuntimeException("Developer error for line: " + data);
 							}
 							continue;
 						}
@@ -182,11 +190,12 @@ public class App extends FuseFilesystemAdapterFull {
 
 						}
 						if (!f.getHusband().toString().contains("--")) {
-							System.err.println("SRIDHAR App.run() missing " + f.getHusband().toString() + " . See if showid=true fixes it.");
-							System.exit(-1);
+							System.err.println("[warn] SRIDHAR App.run() missing " + f.getHusband().toString() + " . See if showid=true fixes it.");
+// 							System.exit(-1);
 						}
 					}
 					for (Family f : idToFamily.values()) {
+						System.err.println("[debug] f.getHusband().toString() = " + f.getHusband().toString());
 						displayNameToIndividualWithSpouse.put(f.getHusband().toString(), f.getHusband());
 						displayNameToIndividualWithSpouse.put(f.getWife().toString(), f.getWife());
 					}
@@ -205,7 +214,7 @@ public class App extends FuseFilesystemAdapterFull {
 
 					String o = "Venkat Rao Rohidekar I29 -- Tarabai  I30";
 					if (!displayNameToIndividualWithSpouse.keySet().contains(o)) {
-						throw new RuntimeException("developer error");
+						throw new RuntimeException("developer error: could not find entry for " + o);
 					}
 
 					Individual child = displayNameToIndividualWithSpouse.get(o);
@@ -220,8 +229,8 @@ public class App extends FuseFilesystemAdapterFull {
 				}
 
 			}.run();
-			System.out.println("App.main() 5");
-			new App().log(false).mount(string);
+			System.out.println("App.main() 5 string = " + string2);
+			new App().log(false).mount(string2);
 		}
 	}
 
@@ -368,21 +377,28 @@ public class App extends FuseFilesystemAdapterFull {
 
 		String lastName;
 
+
 		@Override
+		public String toString() {
+            String string = spouse == null ? "" : " -- " + spouse.getFirstName() + " " + spouse.getLastName() + " " + spouse.id;
+            return getFirstName() + " " + getLastName() + " " + id + string; 
+		}
+
+/*		@Override
 		public String toString() {
 			String string = spouse == null ? ""
 					: " -- " + spouse.getFirstName() + " " + spouse.getLastName() + " " + spouse.id;
 			String string2 = getFirstName() + " " + getLastName() + " ";
-			Boolean showId = Boolean.valueOf(System.getProperty("showid", "false"));
-			if (showId) {
-				string2 += id + string;
-			} else {
-				if (getFirstName().isBlank() && getLastName().isBlank()) {
-					string2 += id + string;
-				}
-			}
+// 			Boolean showId = Boolean.valueOf(System.getProperty("showid", "false"));
+// 			if (showId) {
+// 				string2 += id + string;
+// 			} else {
+// 				if (getFirstName().isBlank() && getLastName().isBlank()) {
+// 					string2 += id + string;
+// 				}
+// 			}
 			return string2;
-		}
+		}*/
 	}
 
 	private static final String FILENAME = "/hello1.txt";

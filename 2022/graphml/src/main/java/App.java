@@ -26,6 +26,7 @@ import net.fusejna.StructStat.StatWrapper;
 import net.fusejna.types.TypeMode.NodeType;
 import net.fusejna.util.FuseFilesystemAdapterFull;
 
+// TODO: rename to GedcomFuse
 public class App extends FuseFilesystemAdapterFull {
 
 	private static Map<String, Individual> childToMother = new HashMap<>();
@@ -43,7 +44,8 @@ public class App extends FuseFilesystemAdapterFull {
 	private static Multimap<String, Individual> displayNameToChildren = HashMultimap.create();
 	private static Multimap<String, Individual> displayNameToChildrenWithSpouse = HashMultimap.create();
 
-	private static final String ROOT_ID = "I26";
+ 	private static final String ROOT_ID = "I25";
+//	private static final String ROOT_ID = "I44";
 
 	public static void main(String[] args) throws FuseException, IOException {
 	    boolean showSpouses = Boolean.parseBoolean(System.getProperty("spouses", "true"));
@@ -56,10 +58,14 @@ public class App extends FuseFilesystemAdapterFull {
 		if (args.length == 1) {
 			new App().log(true).mount(args[0]);
 		} else {
-			System.err.println("Usage: HelloFS <mountpoint>");
 			String string = "family_tree";
+			System.err.println("[warn] no mountpoint specified, using " + System.getProperty("user.dir") + "/" + string);
 			String string2 = System.getProperty("user.home") + "/github/fuse-java/graphml/" + string;
-			new ProcessBuilder().command("diskutil", "unmount", string2).inheritIO().start();
+			if (false) {
+				new ProcessBuilder().command("diskutil", "unmount", string2).inheritIO().start();
+			} else {
+				new ProcessBuilder().command("sudo", "umount", string2).inheritIO().start();
+			}
 			try {
 				Files.createDirectory(Paths.get(string2));
 			} catch (FileAlreadyExistsException e) {
@@ -74,7 +80,7 @@ public class App extends FuseFilesystemAdapterFull {
 				@Override
 				public void run() {
 					System.out.println("App.main.run() 1");
-					File myObj = new File(System.getProperty("user.home") + "/sarnobat.git/gedcom/rohidekar.ged");
+					File myObj = new File(System.getProperty("user.home") + "/sarnobat.git/2021/gedcom/rohidekar.ged");
 					Scanner myReader;
 
 					try {
@@ -99,12 +105,13 @@ public class App extends FuseFilesystemAdapterFull {
 							String regex = "0..(.*)..INDI";
 							Pattern p = Pattern.compile(regex);
 							Matcher matcher = p.matcher(data);
+							System.err.println("[debug] data = " + data);
 							if (matcher.find()) {
 								String s = matcher.group(1);
 								individual = new Individual(s);
 								idToIndividual.put(s, individual);
 							} else {
-								throw new RuntimeException("Developer error");
+								throw new RuntimeException("Developer error for line: " + data);
 							}
 							continue;
 						}
@@ -149,10 +156,10 @@ public class App extends FuseFilesystemAdapterFull {
 						}
 					}
 					myReader.close();
-					if (idToFamily.size() != 88) {
+					if (idToFamily.size() < 88) {
 						throw new RuntimeException("missing families");
 					}
-					if (idToIndividual.size() != 256) {
+					if (idToIndividual.size() < 256) {
 						throw new RuntimeException("missing individual");
 					}
 					// if (!idToIndividual.keySet().contains("F10")) {
@@ -206,12 +213,12 @@ public class App extends FuseFilesystemAdapterFull {
 					    throw new RuntimeException();
 					}
 					if (!idToIndividual.keySet().contains(ROOT_ID)) {
-						throw new RuntimeException();
+						throw new RuntimeException("Couldn't find root " + ROOT_ID);
 					}
 
-					String o = "Venkat Rao Rohidekar I26 -- Tarabai  I27";
+					String o = "Tarabai  I30 -- Venkat Rao Rohidekar I29";
                     if (!displayNameToIndividualWithSpouse.keySet().contains(o)) {
-						throw new RuntimeException("developer error");
+						throw new RuntimeException("developer error: could not find entry for " + o);
 					}
 
 					Individual child = displayNameToIndividualWithSpouse.get(o);
@@ -226,7 +233,7 @@ public class App extends FuseFilesystemAdapterFull {
 				}
 
 			}.run();
-			System.out.println("App.main() 5");
+			System.out.println("App.main() 5 string = " + string);
 			new App().log(false).mount(string);
 		}
 	}
