@@ -21,11 +21,11 @@ public class HelloFS extends FuseFilesystemAdapterFull {
 		ProcessBuilder pb = new ProcessBuilder("open", tempDirWithPrefix.toAbsolutePath().toString());
 		Process p = pb.start();
 
-		new HelloFS().log(true).mount(tempDirWithPrefix.toFile());
+		new HelloFS().log(false).mount(tempDirWithPrefix.toFile());
 	}
 
 	final String filename = "/hello.txt";
-	final String contents = "Hello World!\n";
+	final String contents = "Hello World\n";
 
 	@Override
 	public int getattr(final String path, final StatWrapper stat) {
