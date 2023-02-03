@@ -54,7 +54,7 @@ public class HelloworldFuse extends FuseFilesystemAdapterFull {
 		// "/sarnobat.garagebandbroken/trash/fuse-jna/mnt" };
 		System.out.println("App.main() 1");
 		if (args.length == 1) {
-			new App().mount(args[0]);
+			new HelloworldFuse().log(true).mount(args[0]);
 		} else {
 			System.err.println("Usage: HelloFS <mountpoint>");
 			String string = "family_tree";
@@ -221,7 +221,7 @@ public class HelloworldFuse extends FuseFilesystemAdapterFull {
 
 			}.run();
 			System.out.println("App.main() 5");
-			new App().mount(string);
+			new HelloworldFuse().log(false).mount(string);
 		}
 	}
 
