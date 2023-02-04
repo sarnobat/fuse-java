@@ -1,9 +1,7 @@
-import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.Reader;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -12,7 +10,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import net.fusejna.DirectoryFiller;
-import net.fusejna.ErrorCodes;
 import net.fusejna.FuseException;
 import net.fusejna.StructFuseFileInfo.FileInfoWrapper;
 import net.fusejna.StructStat.StatWrapper;
@@ -86,11 +83,12 @@ public class FuseShellScriptCallouts extends FuseFilesystemAdapterFull {
             stat.setMode(NodeType.FILE).size(contents.length());
             return 0;
         }
-        if (true) {
-            stat.setMode(NodeType.DIRECTORY);
+        if (path.endsWith(".txt")) {
+            stat.setMode(NodeType.FILE).size(getContentsOf(path).length());
             return 0;
         } else {
-            return -ErrorCodes.ENOENT();
+            stat.setMode(NodeType.DIRECTORY);
+            return 0;
         }
 
     }
@@ -98,20 +96,25 @@ public class FuseShellScriptCallouts extends FuseFilesystemAdapterFull {
     @Override
     public int read(final String path, final ByteBuffer buffer, final long size, final long offset,
             final FileInfoWrapper info) {
-        // Compute substring that we are being asked to read
-        final String s = contents.substring((int) offset,
-                (int) Math.max(offset, Math.min(contents.length() - offset, offset + size)));
+        System.out.println("FuseShellScriptCallouts.read() path = " + path);
+        final String s = getContentsOf(path);
+//        .substring((int) offset,
+//                (int) Math.max(offset, Math.min(contents.length() - offset, offset + size)));
         buffer.put(s.getBytes());
         return s.getBytes().length;
     }
 
+    private static String getContentsOf(final String path) {
+        String string = "Contents of " + path;
+        return string;
+    }
+
     @Override
     public int readdir(final String path, final DirectoryFiller filler) {
-        System.out.println("FuseShellScriptCallouts.readdir()" + files.size());
         if (path.equals("/")) {
             filler.add(files);
         } else {
-            
+            filler.add(Paths.get(path).getFileName().toString() + ".txt");
         }
         return 0;
     }
