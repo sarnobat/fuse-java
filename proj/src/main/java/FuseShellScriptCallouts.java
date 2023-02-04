@@ -1,6 +1,7 @@
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
@@ -20,6 +21,7 @@ import net.fusejna.util.FuseFilesystemAdapterFull;
 public class FuseShellScriptCallouts extends FuseFilesystemAdapterFull {
 
     private static final Set<String> files = new HashSet<>();
+    private static Path p2;
 
     public static void main(final String... args) throws FuseException, IOException {
         String scriptList;
@@ -29,9 +31,24 @@ public class FuseShellScriptCallouts extends FuseFilesystemAdapterFull {
             scriptList = args[0];
         }
         Path p = Paths.get(scriptList);
+
+        String scriptContents;
+        if (args.length == 0) {
+            scriptContents = "contents.sh";
+        } else {
+            scriptContents = args[1];
+        }
+        p2 = Paths.get(scriptContents);
+
         if (!p.toFile().exists()) {
-            System.out.println("[error] FuseShellScriptCallouts.main() - no file: " + p.toAbsolutePath().toString());
+            System.out.println(
+                    "[error] FuseShellScriptCallouts.main() - no  list script: " + p.toAbsolutePath().toString());
             System.exit(-1);
+        } else if (!p2.toFile().exists()) {
+            System.out.println(
+                    "[error] FuseShellScriptCallouts.main() - no content script: " + p2.toAbsolutePath().toString());
+            System.exit(-1);
+
         } else {
             new Thread() {
 
@@ -70,8 +87,8 @@ public class FuseShellScriptCallouts extends FuseFilesystemAdapterFull {
         new FuseShellScriptCallouts().log(false).mount(tempDirWithPrefix.toFile());
     }
 
-    final String filename = "/hello.txt";
-    final String contents = "Hello World\n";
+    private final String filename = "/hello.txt";
+    private final String contents = "Hello World\n";
 
     @Override
     public int getattr(final String path, final StatWrapper stat) {
@@ -90,7 +107,6 @@ public class FuseShellScriptCallouts extends FuseFilesystemAdapterFull {
             stat.setMode(NodeType.DIRECTORY);
             return 0;
         }
-
     }
 
     @Override
@@ -98,15 +114,19 @@ public class FuseShellScriptCallouts extends FuseFilesystemAdapterFull {
             final FileInfoWrapper info) {
         System.out.println("FuseShellScriptCallouts.read() path = " + path);
         final String s = getContentsOf(path);
-//        .substring((int) offset,
-//                (int) Math.max(offset, Math.min(contents.length() - offset, offset + size)));
         buffer.put(s.getBytes());
         return s.getBytes().length;
     }
 
     private static String getContentsOf(final String path) {
-        String string = "Contents of " + path;
-        return string;
+        try {
+            InputStream is = new ProcessBuilder().command(p2.toAbsolutePath().toString(), path).start().getInputStream();
+            return new String(is.readAllBytes());
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.exit(-1);
+            return "IMPOSSIBLE";
+        }
     }
 
     @Override
