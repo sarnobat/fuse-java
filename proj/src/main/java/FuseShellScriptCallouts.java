@@ -26,6 +26,7 @@ public class FuseShellScriptCallouts extends FuseFilesystemAdapterFull {
     public static void main(final String... args) throws FuseException, IOException {
         String scriptList;
         if (args.length == 0) {
+            // TODO: rename to dir_contents.sh
             scriptList = "list.sh";
         } else {
             scriptList = args[0];
@@ -34,6 +35,7 @@ public class FuseShellScriptCallouts extends FuseFilesystemAdapterFull {
 
         String scriptContents;
         if (args.length == 0) {
+            // TODO: rename to file_contents.sh
             scriptContents = "contents.sh";
         } else {
             scriptContents = args[1];
