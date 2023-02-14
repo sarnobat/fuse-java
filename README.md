@@ -4,6 +4,7 @@ Including fuse-yurl. Works with groovy
 TODO:
 * graphml
 * csv
+* yurl
 
 ### 2023-01-31
 ```
