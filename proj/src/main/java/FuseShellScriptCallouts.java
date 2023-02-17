@@ -141,6 +141,9 @@ public class FuseShellScriptCallouts extends FuseFilesystemAdapterFull {
         }
     }
 
+    /**
+     * File contents
+     */
     @Override
     public int read(final String path, final ByteBuffer buffer, final long size, final long offset,
             final FileInfoWrapper info) {
@@ -163,6 +166,9 @@ public class FuseShellScriptCallouts extends FuseFilesystemAdapterFull {
         }
     }
 
+    /**
+     * Directory contents
+     */
     @Override
     public int readdir(final String path, final DirectoryFiller filler) {
         System.err.println("FuseShellScriptCallouts.readdir() " + path);
