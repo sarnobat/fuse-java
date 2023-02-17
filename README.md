@@ -1,6 +1,9 @@
 # fuse-java
 Including fuse-yurl. Works with groovy
 
+### Ideas
+* csv (from mint or fidelity) with sizes
+
 ### 2023-01-31
 ```
 Exception in thread "main" java.lang.UnsatisfiedLinkError: Unable to load library 'fuse': dlopen(libfuse.dylib, 0x0009): tried: 'libfuse.dylib' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibfuse.dylib' (no such file), '/Library/Java/JavaVirtualMachines/jdk1.8.0_333.jdk/Contents/Home/bin/./libfuse.dylib' (no such file), '/usr/lib/libfuse.dylib' (no such file, not in dyld cache), 'libfuse.dylib' (no such file), '/usr/lib/libfuse.dylib' (no such file, not in dyld cache)
