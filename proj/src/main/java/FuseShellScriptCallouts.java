@@ -20,26 +20,35 @@ import net.fusejna.util.FuseFilesystemAdapterFull;
 // https://github.com/EtiennePerot/fuse-jna/blob/master/src/main/java/net/fusejna/examples/HelloFS.java
 public class FuseShellScriptCallouts extends FuseFilesystemAdapterFull {
 
-    private static final Set<String> files = new HashSet<>();
+    private static final Set<String> topLevelSubdirs = new HashSet<>();
     private static Path pathContentsScript;
     private static Path pathListDirScript;
 
     public static void main(final String... args) throws FuseException, IOException {
-        String scriptList;
+        String scriptListSubdirs;
         if (args.length == 0) {
             // TODO: rename to dir_contents.sh
-            scriptList = "list.sh";
+            scriptListSubdirs = "list_subdirs.sh";
         } else {
-            scriptList = args[0];
+            scriptListSubdirs = args[0];
         }
-        pathListDirScript = Paths.get(scriptList);
+        pathListDirScript = Paths.get(scriptListSubdirs);
 
+        String scriptListFiles;
+        if (args.length == 0) {
+            // TODO: rename to dir_contents.sh
+            scriptListFiles = "list_files.sh";
+        } else {
+            scriptListFiles = args[1];
+        }
+        pathListDirScript = Paths.get(scriptListFiles);
+        
         String scriptContents;
         if (args.length == 0) {
             // TODO: rename to file_contents.sh
             scriptContents = "contents.sh";
         } else {
-            scriptContents = args[1];
+            scriptContents = args[2];
         }
         pathContentsScript = Paths.get(scriptContents);
 
@@ -58,8 +67,8 @@ public class FuseShellScriptCallouts extends FuseFilesystemAdapterFull {
                 @Override
                 public void run() {
                     String pathDirList = pathListDirScript.toAbsolutePath().toString();
-                    files.clear();
-                    files.addAll(getFilesInDir(pathDirList,"/"));
+                    topLevelSubdirs.clear();
+                    topLevelSubdirs.addAll(getSubdirsInDir(pathDirList, "/"));
                 }
 
             }.start();
@@ -72,7 +81,7 @@ public class FuseShellScriptCallouts extends FuseFilesystemAdapterFull {
         new FuseShellScriptCallouts().log(false).mount(tempDirWithPrefix.toFile());
     }
 
-    private static Set<String> getFilesInDir(String pathDirList, String path) {
+    private static Set<String> getSubdirsInDir(String pathDirList, String path) {
         System.err.println("FuseShellScriptCallouts.getFilesInDir() " + pathDirList + " " + path);
         Set<String> files3 = new HashSet<>();
         ProcessBuilder pb = new ProcessBuilder("sh", pathDirList, path);
@@ -87,7 +96,8 @@ public class FuseShellScriptCallouts extends FuseFilesystemAdapterFull {
                         String line;
                         try {
                             while ((line = in.readLine()) != null) {
-                                System.err.println("FuseShellScriptCallouts.getFilesInDir() " + pathDirList + ": " + line);
+                                System.err.println(
+                                        "FuseShellScriptCallouts.getFilesInDir() " + pathDirList + ": " + line);
                             }
                         } catch (IOException e) {
                             e.printStackTrace();
@@ -147,7 +157,7 @@ public class FuseShellScriptCallouts extends FuseFilesystemAdapterFull {
     @Override
     public int read(final String path, final ByteBuffer buffer, final long size, final long offset,
             final FileInfoWrapper info) {
-        System.out.println("FuseShellScriptCallouts.read() path = " + path);
+//        System.out.println("FuseShellScriptCallouts.read() path = " + path);
         final String s = getContentsOf(path);
         buffer.put(s.getBytes());
         return s.getBytes().length;
@@ -171,20 +181,21 @@ public class FuseShellScriptCallouts extends FuseFilesystemAdapterFull {
      */
     @Override
     public int readdir(final String path, final DirectoryFiller filler) {
-        System.err.println("FuseShellScriptCallouts.readdir() " + path);
+        System.err.println("FuseShellScriptCallouts.readdir() 1 " + path);
         if (path.equals("/")) {
-            filler.add(files);
+            System.err.println("FuseShellScriptCallouts.readdir() 2 topLevelSubdirs = " + topLevelSubdirs.size());
+            filler.add(topLevelSubdirs);
         } else {
-            System.err.println("FuseShellScriptCallouts.readdir() execute script with arg " + path);
+            System.err.println("FuseShellScriptCallouts.readdir() 3 execute script with arg " + path);
 
             {
-                files.clear();
-                Set<String> filesInDir = getFilesInDir(pathListDirScript.toAbsolutePath().toString(),path);
-                System.err.println("FuseShellScriptCallouts.readdir() " + filesInDir.size());
-                files.addAll(filesInDir);
-                filler.add(files);
+                Set<String> subdirsInDir = getSubdirsInDir(pathListDirScript.toAbsolutePath().toString(), path);
+//                System.err.println("FuseShellScriptCallouts.readdir() " + subdirsInDir.size());
+                filler.add(subdirsInDir);
             }
-            filler.add(Paths.get(path).getFileName().toString() + ".txt");
+            {
+                filler.add(Paths.get(path).getFileName().toString());
+            }
         }
         return 0;
     }
