@@ -3,6 +3,8 @@ Including fuse-yurl. Works with groovy
 
 ### Ideas
 * csv (from mint or fidelity) with sizes
+* graphml
+* yurl
 
 ### 2023-01-31
 ```
