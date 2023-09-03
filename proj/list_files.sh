@@ -1,1 +1,0 @@
-list_files_mint.com.sh
