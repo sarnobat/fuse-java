@@ -2,6 +2,8 @@
 Including fuse-yurl. Works with groovy
 
 ### Ideas
+* callout to bash
+* oracle
 * csv (from mint or fidelity) with sizes
 * graphml
 * yurl
