@@ -24,3 +24,6 @@ Exception in thread "main" java.lang.UnsatisfiedLinkError: Unable to load librar
 	at net.fusejna.FuseFilesystem.mount(FuseFilesystem.java:577)
 	at App.main(App.java:233)
 ```
+### HelloFS
+
+https://github.com/sarnobat/fuse-java/blob/master/proj/src/main/java/HelloFS.java
