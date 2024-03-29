@@ -192,6 +192,7 @@ public class FuseShellScriptCallouts extends FuseFilesystemAdapterFull {
             {
                 Set<String> subdirsInDir = getSubdirsInDir(pathListDirScript.toAbsolutePath().toString(), path);
 //                System.err.println("FuseShellScriptCallouts.readdir() " + subdirsInDir.size());
+				// We can't tell whether this is a dir or file. That's done in getattr()
                filler.add(subdirsInDir);
             }
             {
