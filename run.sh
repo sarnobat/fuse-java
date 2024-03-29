@@ -12,6 +12,7 @@ mvn compile assembly:single -f proj/pom.xml
 ls /usr/local/lib/libfuse.dylib
 
 LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib java -Djava.library.path=/usr/local/lib/ -jar proj/target/myproj-1.1-SNAPSHOT-jar-with-dependencies.jar
+LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib java -Djava.library.path=/usr/local/lib/ -classpath proj/target/myproj-1.1-SNAPSHOT-jar-with-dependencies.jar App
 
 cat <<EOF
 # Now execute:

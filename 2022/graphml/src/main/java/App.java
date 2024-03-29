@@ -453,6 +453,10 @@ public class App extends FuseFilesystemAdapterFull {
 		return fileContents.getBytes().length;
 	}
 
+	//------------------------------------------------------------------------------------
+	// read directory
+	//------------------------------------------------------------------------------------
+
 	@Override
 	public int readdir(String path, DirectoryFiller filler) {
 
@@ -485,6 +489,9 @@ public class App extends FuseFilesystemAdapterFull {
 				}
 				Collection<Individual> collection = displayNameToChildrenWithSpouse.get(child.toString());
 				for (Individual i : collection) {
+					////
+					//// The Main part
+					///
 					filler.add(i.toString());
 				}
 				// for (Entry<String, String> childToParent :
