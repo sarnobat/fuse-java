@@ -53,11 +53,11 @@ public class FuseShellScriptCallouts extends FuseFilesystemAdapterFull {
         pathContentsScript = Paths.get(scriptContents);
 
         if (!pathListDirScript.toFile().exists()) {
-            System.out.println("[error] FuseShellScriptCallouts.main() - no  list script: "
+            System.err.println("[error] FuseShellScriptCallouts.main() - no  list script: "
                     + pathListDirScript.toAbsolutePath().toString());
             System.exit(-1);
         } else if (!pathContentsScript.toFile().exists()) {
-            System.out.println("[error] FuseShellScriptCallouts.main() - no content script: "
+            System.err.println("[error] FuseShellScriptCallouts.main() - no content script: "
                     + pathContentsScript.toAbsolutePath().toString());
             System.exit(-1);
 
@@ -74,7 +74,7 @@ public class FuseShellScriptCallouts extends FuseFilesystemAdapterFull {
             }.start();
         }
         Path tempDirWithPrefix = Files.createTempDirectory("");
-        System.out.println("HelloFS.main()\nfind" + tempDirWithPrefix + " -maxdepth 3");
+        System.err.println("HelloFS.main()\nfind " + tempDirWithPrefix + " -maxdepth 3 ");
         ProcessBuilder pb = new ProcessBuilder("open", tempDirWithPrefix.toAbsolutePath().toString());
         pb.start();
 
@@ -82,7 +82,7 @@ public class FuseShellScriptCallouts extends FuseFilesystemAdapterFull {
     }
 
     private static Set<String> getSubdirsInDir(String pathDirList, String path) {
-        System.err.println("FuseShellScriptCallouts.getFilesInDir() " + pathDirList + " " + path);
+        System.err.println("FuseShellScriptCallouts.getFilesInDir() input: " + pathDirList + " " + path);
         Set<String> files3 = new HashSet<>();
         ProcessBuilder pb = new ProcessBuilder("sh", pathDirList, path);
         try {
@@ -97,7 +97,7 @@ public class FuseShellScriptCallouts extends FuseFilesystemAdapterFull {
                         try {
                             while ((line = in.readLine()) != null) {
                                 System.err.println(
-                                        "FuseShellScriptCallouts.getFilesInDir() " + pathDirList + ": " + line);
+                                        "FuseShellScriptCallouts.getFilesInDir() stderr of script " + pathDirList + ": " + line);
                             }
                         } catch (IOException e) {
                             e.printStackTrace();
@@ -118,6 +118,7 @@ public class FuseShellScriptCallouts extends FuseFilesystemAdapterFull {
             }
 
             in.close();
+            System.err.println("FuseShellScriptCallouts.getFilesInDir() returned: " + files3);
             return files3;
 
         } catch (IOException e) {
@@ -181,22 +182,22 @@ public class FuseShellScriptCallouts extends FuseFilesystemAdapterFull {
      */
     @Override
     public int readdir(final String path, final DirectoryFiller filler) {
-        System.err.println("FuseShellScriptCallouts.readdir() 1 " + path);
-        if (path.equals("/")) {
-            System.err.println("FuseShellScriptCallouts.readdir() 2 topLevelSubdirs = " + topLevelSubdirs.size());
-            filler.add(topLevelSubdirs);
-        } else {
+        System.err.println("FuseShellScriptCallouts.readdir() 1 >>" + path +"<<");
+//         if (path.equals("/")) {
+//             System.err.println("FuseShellScriptCallouts.readdir() 2 topLevelSubdirs = " + topLevelSubdirs.size());
+//             filler.add("by_name");
+//         } else {
             System.err.println("FuseShellScriptCallouts.readdir() 3 execute script with arg " + path);
 
             {
                 Set<String> subdirsInDir = getSubdirsInDir(pathListDirScript.toAbsolutePath().toString(), path);
 //                System.err.println("FuseShellScriptCallouts.readdir() " + subdirsInDir.size());
-                filler.add(subdirsInDir);
+               filler.add(subdirsInDir);
             }
             {
-                filler.add(Paths.get(path).getFileName().toString());
+//                 filler.add(Paths.get(path).getFileName().toString());
             }
-        }
+//         }
         return 0;
     }
 
