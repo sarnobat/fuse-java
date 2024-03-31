@@ -27,7 +27,7 @@ import net.fusejna.types.TypeMode.NodeType;
 import net.fusejna.util.FuseFilesystemAdapterFull;
 
 // TODO: rename to GedcomFuse
-public class App extends FuseFilesystemAdapterFull {
+public class GedcomFuse extends FuseFilesystemAdapterFull {
 
 	private static Map<String, Individual> childToMother = new HashMap<>();
 	private static Map<String, Individual> childToFather = new HashMap<>();
@@ -54,9 +54,9 @@ public class App extends FuseFilesystemAdapterFull {
 		// array initialization in groovy?
 		// final String[] args1 = args;// {
 		// "/sarnobat.garagebandbroken/trash/fuse-jna/mnt" };
-		System.out.println("App.main() 1");
+		System.out.println("GedcomFuse.main() 1");
 		if (args.length == 1) {
-			new App().log(true).mount(args[0]);
+			new GedcomFuse().log(true).mount(args[0]);
 		} else {
 			System.err.println("Usage: HelloFS <mountpoint>");
 	//		String string = "family_tree";
@@ -71,33 +71,33 @@ public class App extends FuseFilesystemAdapterFull {
 			try {
 				Files.createDirectory(Paths.get(string2));
 			} catch (FileAlreadyExistsException e) {
-//				System.out.println("App.main() 2");
+//				System.out.println("GedcomFuse.main() 2");
 //				System.exit(-1);
 			}
-			System.out.println("App.main() 3");
+			System.out.println("GedcomFuse.main() 3");
 
 			new Thread() {
 
 				@SuppressWarnings("resource")
 				@Override
 				public void run() {
-					System.out.println("App.main.run() 1");
+					System.out.println("GedcomFuse.main.run() 1");
 					File myObj = new File(System.getProperty("user.home") + "/sarnobat.git/2021/gedcom/rohidekar.ged");
 					Scanner myReader;
 
 					try {
-						System.out.println("App.main.run() 2");
+						System.out.println("GedcomFuse.main.run() 2");
 						myReader = new Scanner(myObj);
 
-						System.out.println("App.main.run() 3");
+						System.out.println("GedcomFuse.main.run() 3");
 					} catch (FileNotFoundException e) {
 						throw new RuntimeException(e);
 					}
 					Individual individual = null;
 					Family family = null;
-					System.out.println("App.main.run() 4");
+					System.out.println("GedcomFuse.main.run() 4");
 					while (myReader.hasNextLine()) {
-//						System.out.println("App.main.run() 5");
+//						System.out.println("GedcomFuse.main.run() 5");
 						String data = myReader.nextLine();
 						if (data.startsWith("0") && data.endsWith("INDI")) {
 
@@ -172,7 +172,7 @@ public class App extends FuseFilesystemAdapterFull {
 						// System.out.println("Has parent: " + i.toString());
 					}
 					for (Family f : idToFamily.values()) {
-// 						System.out .println("SRIDHAR App.main.run() family father = " + f.getHusband().toString() + "\thas " + f.getChildren().size() + " children: " + f.getChildren().toString());
+// 						System.out .println("SRIDHAR GedcomFuse.main.run() family father = " + f.getHusband().toString() + "\thas " + f.getChildren().size() + " children: " + f.getChildren().toString());
 						f.getHusband().setSpouse(f.getWife());
 						f.getWife().setSpouse(f.getHusband());
 						for (Individual child : f.getChildren()) {
@@ -190,7 +190,7 @@ public class App extends FuseFilesystemAdapterFull {
 
 						}
 						if (!f.getHusband().toString().contains("--")) {
-							System.err.println("[warn] SRIDHAR App.run() missing " + f.getHusband().toString() + " . See if showid=true fixes it.");
+							System.err.println("[warn] SRIDHAR GedcomFuse.run() missing " + f.getHusband().toString() + " . See if showid=true fixes it.");
 // 							System.exit(-1);
 						}
 					}
@@ -220,7 +220,7 @@ public class App extends FuseFilesystemAdapterFull {
 					Individual child = displayNameToIndividualWithSpouse.get(o);
 					if (!displayNameToIndividualWithSpouse.containsKey(child.toString())) {
 						for (String s : displayNameToIndividualWithSpouse.keySet()) {
-							System.out.println("// SRIDHAR App.main.run() " + s);
+							System.out.println("// SRIDHAR GedcomFuse.main.run() " + s);
 						}
 						throw new RuntimeException("");
 					}
@@ -229,8 +229,8 @@ public class App extends FuseFilesystemAdapterFull {
 				}
 
 			}.run();
-			System.out.println("App.main() 5 string = " + string2);
-			new App().log(false).mount(string2);
+			System.out.println("GedcomFuse.main() 5 string = " + string2);
+			new GedcomFuse().log(false).mount(string2);
 		}
 	}
 
@@ -408,7 +408,7 @@ public class App extends FuseFilesystemAdapterFull {
 	public int getattr(String path, StatWrapper stat) {
 		try {
 			stat.setAllTimesMillis(System.currentTimeMillis());
-			// System.out.println("SRIDHAR App.getattr() " + path);
+			// System.out.println("SRIDHAR GedcomFuse.getattr() " + path);
 			if (path.equals(File.separator)) { // Root directory
 				stat.setMode(NodeType.DIRECTORY);
 				return 0;
@@ -419,14 +419,14 @@ public class App extends FuseFilesystemAdapterFull {
 			} else {
 				String lastPartOf = getLastPartOf(path);
 				if (displayNameToIndividualWithSpouse.keySet().contains(lastPartOf)) {
-					// System.out.println("SRIDHAR App.getattr() DIRECTORY: " +
+					// System.out.println("SRIDHAR GedcomFuse.getattr() DIRECTORY: " +
 					// path);
 					stat.setMode(NodeType.DIRECTORY);
 					return 0;
 				} else {
-					// System.out.println("SRIDHAR App.getattr() lastPartOf = "
+					// System.out.println("SRIDHAR GedcomFuse.getattr() lastPartOf = "
 					// + lastPartOf);
-					// System.out.println("SRIDHAR App.getattr() FILE: " +
+					// System.out.println("SRIDHAR GedcomFuse.getattr() FILE: " +
 					// path);
 					stat.setMode(NodeType.FILE).size(CONTENTS.length());
 					return 0;
@@ -442,7 +442,7 @@ public class App extends FuseFilesystemAdapterFull {
 		Path path2 = Paths.get(path);
 		// String string = path2.getName(path2.getNameCount()).toString();
 		String string = path2.getFileName().toString();
-		// System.out.println("SRIDHAR App.getLastPartOf() " + string);
+		// System.out.println("SRIDHAR GedcomFuse.getLastPartOf() " + string);
 		return string;
 	}
 
@@ -459,7 +459,7 @@ public class App extends FuseFilesystemAdapterFull {
 		final String fileContents = CONTENTS.substring((int) offset,
 				(int) Math.max(offset, Math.min(CONTENTS.length() - offset, offset + size)));
 		buffer.put(fileContents.getBytes());
-		// System.out.println("SRIDHAR App.read() " + fileContents);
+		// System.out.println("SRIDHAR GedcomFuse.read() " + fileContents);
 		return fileContents.getBytes().length;
 	}
 
@@ -469,7 +469,7 @@ public class App extends FuseFilesystemAdapterFull {
 		// filler.add(FILENAME);
 		// filler.add("sridhar.txt");
 		try {
-			// System.out.println("SRIDHAR App.readdir() " + path);
+			// System.out.println("SRIDHAR GedcomFuse.readdir() " + path);
 			if (path.equals("/")) {
 				// String key = "I31";
 				Individual individual = idToIndividual.get(ROOT_ID);
@@ -482,10 +482,10 @@ public class App extends FuseFilesystemAdapterFull {
 				}
 			} else {
 				String s = Paths.get(path).getFileName().toString();
-				System.out.println("SRIDHAR App.readdir() " + s);
+				System.out.println("SRIDHAR GedcomFuse.readdir() " + s);
 				Individual child = displayNameToIndividualWithSpouse.get(s);
 				for (String key : displayNameToIndividualWithSpouse.keySet()) {
-					System.out.println("SRIDHAR App.readdir() " + key);
+					System.out.println("SRIDHAR GedcomFuse.readdir() " + key);
 				}
 				if (!displayNameToIndividualWithSpouse.containsKey(child.toString())) {
 					// throw new RuntimeException("");
@@ -515,7 +515,7 @@ public class App extends FuseFilesystemAdapterFull {
 
 	@Override
 	public int rename(String oldName, String newName) {
-		System.out.println("SRIDHAR App.rename() mv " + oldName + " " + newName);
+		System.out.println("SRIDHAR GedcomFuse.rename() mv " + oldName + " " + newName);
 		return 0;
 
 	}

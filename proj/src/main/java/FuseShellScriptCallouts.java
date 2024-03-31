@@ -118,7 +118,8 @@ public class FuseShellScriptCallouts extends FuseFilesystemAdapterFull {
             }
 
             in.close();
-            System.err.println("FuseShellScriptCallouts.getFilesInDir() returned: " + files3);
+            // Too much output, get just the first few
+//            System.err.println("FuseShellScriptCallouts.getFilesInDir() returned: " + files3);
             return files3;
 
         } catch (IOException e) {
