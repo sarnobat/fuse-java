@@ -74,7 +74,7 @@ public class FuseShellScriptCallouts extends FuseFilesystemAdapterFull {
             }.start();
         }
         Path tempDirWithPrefix = Files.createTempDirectory("");
-        System.err.println("HelloFS.main()\nfind " + tempDirWithPrefix + " -maxdepth 3 ");
+        System.err.println("[info] HelloFS.main()\nfind " + tempDirWithPrefix + " -maxdepth 3 ");
         ProcessBuilder pb = new ProcessBuilder("open", tempDirWithPrefix.toAbsolutePath().toString());
         pb.start();
 
@@ -82,7 +82,7 @@ public class FuseShellScriptCallouts extends FuseFilesystemAdapterFull {
     }
 
     private static Set<String> getSubdirsInDir(String pathDirList, String path) {
-        System.err.println("FuseShellScriptCallouts.getFilesInDir() input: " + pathDirList + " " + path);
+        System.err.println("[debug] FuseShellScriptCallouts.getFilesInDir() input: " + pathDirList + " " + path);
         Set<String> files3 = new HashSet<>();
         ProcessBuilder pb = new ProcessBuilder("sh", pathDirList, path);
         try {
@@ -97,7 +97,7 @@ public class FuseShellScriptCallouts extends FuseFilesystemAdapterFull {
                         try {
                             while ((line = in.readLine()) != null) {
                                 System.err.println(
-                                        "FuseShellScriptCallouts.getFilesInDir() stderr of script " + pathDirList + ": " + line);
+                                        "[debug] FuseShellScriptCallouts.getFilesInDir() stderr of script " + pathDirList + ": " + line);
                             }
                         } catch (IOException e) {
                             e.printStackTrace();
@@ -183,12 +183,11 @@ public class FuseShellScriptCallouts extends FuseFilesystemAdapterFull {
      */
     @Override
     public int readdir(final String path, final DirectoryFiller filler) {
-        System.err.println("FuseShellScriptCallouts.readdir() 1 >>" + path +"<<");
 //         if (path.equals("/")) {
 //             System.err.println("FuseShellScriptCallouts.readdir() 2 topLevelSubdirs = " + topLevelSubdirs.size());
 //             filler.add("by_name");
 //         } else {
-            System.err.println("FuseShellScriptCallouts.readdir() 3 execute script with arg " + path);
+            System.err.println("[debug] FuseShellScriptCallouts.readdir() execute script with arg " + path);
 
             {
                 Set<String> subdirsInDir = getSubdirsInDir(pathListDirScript.toAbsolutePath().toString(), path);
