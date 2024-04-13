@@ -1,0 +1,84 @@
+name: build java native image
+on:
+  push:
+    branches: [ "main" ]
+jobs:
+
+  create_release:
+    name: Create release
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+    steps:
+      - name: Create release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.run_id }}
+          release_name: Release ${{ github.run_id }} ${{ env.date }}
+
+  build-java:
+    needs: create_release
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      # Set fail-fast to false to ensure that feedback is delivered for all matrix combinations. Consider changing this to true when your workflow is stable.
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+        build_type: [Release]
+        include:
+          - os: windows-latest
+            output: ./fusejava.exe
+            binary: fusejava.exe
+          - os: ubuntu-latest
+            output: ./fusejava
+            binary: fusejava.linux
+          - os: macos-latest
+            output: ./fusejava
+            binary: fusejava.darwin
+  
+    steps:
+      - uses: actions/checkout@v4
+      - uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: '17'
+          distribution: 'graalvm-community'
+          components: 'native-image'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: env
+        run: |
+          echo "GRAALVM_HOME: $GRAALVM_HOME"
+          echo "JAVA_HOME: $JAVA_HOME"
+          java --version
+          native-image --version
+      - name: native image
+        run: $GRAALVM_HOME/bin/native-image -H:Class=com.App -jar proj/target/myproj-1.1-SNAPSHOT-jar-with-dependencies.jar -H:Name=csv2path.osx
+      - name: Find all files
+        shell: bash
+        run: |
+            find ./proj/target/
+      - name: Permissions
+        shell: bash
+        run: |
+            chmod a+x ${{ matrix.output }}
+      - name: rename
+        shell: bash
+        run: |
+            mv ${{ matrix.output }}  ${{ matrix.binary }}
+      - name: run program
+        run: |
+            ./${{ matrix.binary }}
+
+      - name: Upload
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create_release.outputs.upload_url }}
+          asset_path: ./${{ matrix.binary }}
+          #asset_name: hello.${{ matrix.os }}.${{ matrix.c_compiler }}
+          asset_name: ${{ matrix.binary }}
+          asset_content_type: application/octet-stream
