@@ -58,7 +58,7 @@ jobs:
         run: |
           mvn install:install-file -f proj/pom.xml -DgroupId=net.fusejna -DartifactId=fuse-jna -Dversion=0.0.1-SNAPSHOT  -Dpackaging=jar -Dfile=fuse-jna-0.0.1-SNAPSHOT.jar
           mvn compile assembly:single -f proj/pom.xml
-          $GRAALVM_HOME/bin/native-image -H:Class=com.App -jar proj/target/myproj-1.1-SNAPSHOT-jar-with-dependencies.jar
+          $GRAALVM_HOME/bin/native-image -H:Class=com.App -jar proj/target/myproj-1.1-SNAPSHOT-jar-with-dependencies.jar -H:Name=fusejava
       - name: Find all files
         shell: bash
         run: |
