@@ -62,7 +62,7 @@ jobs:
       - name: Find all files
         shell: bash
         run: |
-            find ./proj/target/
+            find .
       - name: Permissions
         shell: bash
         run: |
