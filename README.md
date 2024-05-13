@@ -3,7 +3,7 @@ Including fuse-yurl. Works with groovy
 
 ### 2024-04
 
-Unfortunately I couldn't get FuseShellScriptCallouts working. I'll have to revert to python (since golang doesn't have support I vaguely recall).
+Unfortunately I couldn't get FuseShellScriptCallouts working. I'll have to revert to python (since golang doesn't have support I vaguely recall). Wait, seems like fuse isn't supported on Windows.
 ```
 Exception in thread "main" java.lang.UnsatisfiedLinkError: No awt in java.library.path
 	at org.graalvm.nativeimage.builder/com.oracle.svm.core.jdk.NativeLibrarySupport.loadLibraryRelative(NativeLibrarySupport.java:136)
