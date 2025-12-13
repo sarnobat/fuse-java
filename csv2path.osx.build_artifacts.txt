@@ -1,0 +1,3 @@
+[EXECUTABLE]
+csv2path.osx
+
